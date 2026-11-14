@@ -3,7 +3,10 @@
   "services": {
     "app": {
       "root": "web",
-      "framework": "vite"
+      "framework": "vite",
+      "rewrites": [
+        { "source": "/(.*)", "destination": "/index.html" }
+      ]
     },
     "api": {
       "root": "api",
@@ -21,8 +24,7 @@
     {
       "source": "/(.*)",
       "destination": {
-        "service": "app",
-        "path": "/index.html"
+        "service": "app"
       }
     }
   ]
