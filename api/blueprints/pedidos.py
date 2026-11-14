@@ -26,16 +26,19 @@ ENTREGA_SEGUNDOS = 120
 
 
 def _status_efetivo_item(item):
-    """Estado real do item: 'negado'/'aguardando' são fixos; após confirmado, deriva do tempo."""
+    """Estado real do item: 'negado'/'aguardando' são fixos; após confirmado, deriva do tempo.
+
+    Um status marcado manualmente pela cozinha ('pronto'/'entregue') funciona como piso:
+    o tempo pode AVANÇAR o estágio, nunca retrocedê-lo."""
     if item.status in ("negado", "aguardando"):
         return item.status
     # status armazenado é 'confirmado' (ou posterior); o tempo decorrido define o estágio atual.
     if item.confirmado_em is None:
         return item.status
     decorrido = (datetime.now(timezone.utc) - _aware(item.confirmado_em)).total_seconds()
-    if decorrido >= ENTREGA_SEGUNDOS:
+    if decorrido >= ENTREGA_SEGUNDOS or item.status == "entregue":
         return "entregue"
-    if decorrido >= PREPARO_SEGUNDOS:
+    if decorrido >= PREPARO_SEGUNDOS or item.status == "pronto":
         return "pronto"
     return "preparando"
 

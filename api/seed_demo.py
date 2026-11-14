@@ -4,22 +4,9 @@ from decimal import Decimal
 from app import app
 from models.crud import CRUD
 from utils import slugify
-import placeholders
 
 DEMO_PASSWORD = "SaborDemo123!"
 
-# Paleta por índice para variar as fotos de demonstração.
-_CORES = ["#426700", "#9a5b00", "#7a1f4b", "#1f5a7a", "#8a6d00", "#6a1f7a", "#2f7a3f"]
-
-
-def _placeholder_image(texto, cor):
-    """Gera uma imagem rotulada em uploads/ (via ImageMagick) para a demo.
-
-    Delega para o módulo compartilhado `placeholders`. Devolve a chave ou None
-    quando o `magick` não está disponível (ex.: Vercel/CI) — nesse caso o app
-    serve o placeholder padrão estático automaticamente na serialização.
-    """
-    return placeholders.generate_labeled_placeholder(texto, cor)
 
 RESTAURANTS = [
     {
@@ -360,11 +347,7 @@ def ensure_ingredient(name, unit):
         unidade=unit,
         quantidade=Decimal("50.00"),
     )
-    if not ing.imagem:
-        key = _placeholder_image(name, "#5a4a2a")
-        if key:
-            CRUD.update.ingrediente(ing.id, {"imagem": key})
-            ing = CRUD.read.ingrediente(ing.id)
+    # Sem imagem própria: a serialização usa a imagem padrão (/api/placeholder).
     return ing
 
 
@@ -642,17 +625,11 @@ def seed():
             "price": data["preco"],
         }
 
-        # Fotos de demonstração (geradas localmente) para restaurante e seus pratos, se ainda não têm.
-        cor = _CORES[(restaurant.id - 1) % len(_CORES)]
-        if not restaurant.imagem:
-            key = _placeholder_image(restaurant.nome, cor)
-            if key:
-                CRUD.update.restaurante(restaurant.id, {"imagem": key})
-        for prato in CRUD.read.pratos(filters={"id_restaurante": restaurant.id}):
-            if not prato.imagem:
-                key = _placeholder_image(prato.nome, cor)
-                if key:
-                    CRUD.update.prato(prato.id, {"imagem": key})
+        # Imagens: deixamos os restaurantes e pratos SEM imagem própria de propósito,
+        # para que a serialização devolva a imagem padrão (/api/placeholder). Antes
+        # gerávamos PNGs em uploads/, mas essa pasta é efêmera/ignorada (não persiste
+        # em produção nem após reset), o que deixava a imagem quebrada. A default é
+        # estável e versionada.
 
     customers = {
         data["email"]: ensure_customer(data)
@@ -695,6 +672,12 @@ def seed():
         for i, restaurante in enumerate(restaurantes):
             cook = cooks_list[i % len(cooks_list)]
             CRUD.create.cozinheiro_restaurante(cook.id_usuario, restaurante.id)
+
+    # Rafael é filiado a TODAS as cozinhas (gerencia o catálogo inteiro na demo).
+    rafael = cooks.get("rafael.cozinha@sabor.test")
+    if rafael and restaurantes:
+        for restaurante in restaurantes:
+            CRUD.create.cozinheiro_restaurante(rafael.id_usuario, restaurante.id)
 
     bench_addresses = [
         {

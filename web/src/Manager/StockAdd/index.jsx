@@ -75,7 +75,7 @@ export const StockAdd=()=>{
             <div className='stockAddForm px-4 py-8 md:px-10 lg:px-[88px]'>
                 <h1 className='text-[28px] md:text-[36px]'>{isEdit ? 'Editar item do estoque' : 'Adição de itens ao estoque'}</h1>
                 <form onSubmit={submit}>
-                    <Input label='Nome Produto' placeholder='Insira o nome do produto' type='text' value={nome} onChange={(e)=>setNome(e.target.value)} className='loginInput'/>
+                    <Input label='Nome Produto' placeholder='Insira o nome do produto' type='text' value={nome} onChange={(e)=>setNome(e.target.value)} className='loginInput' maxLength={30}/>
                     {errors.nome && <p role='alert' className='stockAddError'>{errors.nome}</p>}
 
                     <Input label='Data de validade' placeholder='AAAA-MM-DD' type='date' value={validade} onChange={(e)=>setValidade(e.target.value)} className='loginInput'/>

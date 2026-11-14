@@ -305,7 +305,7 @@ def create_app(test_config=None):
             "script-src": "'self' https://vlibras.gov.br",
             "style-src": "'self' 'unsafe-inline' https://fonts.googleapis.com https://vlibras.gov.br https://*.vlibras.gov.br",
             "font-src": "'self' https://fonts.gstatic.com https://*.gstatic.com",
-            "img-src": "'self' data: https://vlibras.gov.br https://*.vlibras.gov.br",
+            "img-src": "'self' data: https://vlibras.gov.br https://*.vlibras.gov.br https://*.blob.vercel-storage.com",
             "frame-src": "'self' https://vlibras.gov.br https://*.vlibras.gov.br",
             "connect-src": "'self' https://fonts.googleapis.com https://fonts.gstatic.com https://vlibras.gov.br https://*.vlibras.gov.br",
         },

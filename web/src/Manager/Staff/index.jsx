@@ -49,10 +49,10 @@ export const Staff=()=>{
                         </select>
                     </div>
 
-                    <Input label='Nome' placeholder='Nome completo' type='text' value={nome} onChange={(e)=>setNome(e.target.value)} className='loginInput'/>
+                    <Input label='Nome' placeholder='Nome completo' type='text' value={nome} onChange={(e)=>setNome(e.target.value)} className='loginInput' maxLength={120}/>
                     {errors.nome && <p role='alert' className='staffError'>{errors.nome}</p>}
 
-                    <Input label='Email' placeholder='email@exemplo.com' type='email' value={email} onChange={(e)=>setEmail(e.target.value)} className='loginInput'/>
+                    <Input label='Email' placeholder='email@exemplo.com' type='email' value={email} onChange={(e)=>setEmail(e.target.value)} className='loginInput' maxLength={90}/>
                     {errors.email && <p role='alert' className='staffError'>{errors.email}</p>}
 
                     <Input label='Senha' placeholder='Senha forte' type='password' value={password} onChange={(e)=>setPassword(e.target.value)} className='loginInput'/>

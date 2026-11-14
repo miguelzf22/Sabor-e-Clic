@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useParams } from 'react-router-dom'
-import { HeartIcon, StarIcon } from '@phosphor-icons/react'
+import { HeartIcon, StarIcon, StarHalfIcon } from '@phosphor-icons/react'
 import './Restaurant.css'
 import { Header } from '../Components/Header'
 import { CardCardapio } from '../CardCardapio'
@@ -81,12 +81,14 @@ export const Restaurant = () => {
                 >
                     {restaurant.avaliacao_total > 0 ? (
                         <>
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <StarIcon
-                                    key={star}
-                                    weight={star <= Math.round(restaurant.avaliacao_media) ? 'fill' : 'regular'}
-                                />
-                            ))}
+                            {[1, 2, 3, 4, 5].map((star) => {
+                                const media = restaurant.avaliacao_media
+                                // Estrela cheia quando a média cobre a posição inteira; meia
+                                // estrela quando cobre a metade (ex.: 4.5 -> 4 cheias + 1 meia).
+                                if (media >= star) return <StarIcon key={star} weight='fill' />
+                                if (media >= star - 0.5) return <StarHalfIcon key={star} weight='fill' />
+                                return <StarIcon key={star} weight='regular' />
+                            })}
                             <span className="restaurantPageRatingValue">
                                 {restaurant.avaliacao_media.toFixed(1)}
                                 <span className="restaurantPageRatingCount">

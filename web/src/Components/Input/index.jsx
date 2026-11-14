@@ -1,6 +1,6 @@
 import { useId } from 'react'
 import './Input.css'
-export const Input=({label,placeholder,type,value,onChange,className})=>{
+export const Input=({label,placeholder,type,value,onChange,className,maxLength})=>{
     // Associa label<->input via id gerado (acessibilidade: leitores de tela e
     // clique no rótulo para focar o campo).
     const inputId=useId()
@@ -14,6 +14,7 @@ export const Input=({label,placeholder,type,value,onChange,className})=>{
             placeholder={placeholder}
             value = {value}
             onChange = {onChange}
+            maxLength={maxLength}
         />
         </div>
         </>

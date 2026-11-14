@@ -142,7 +142,7 @@ export const KitchenDishes=()=>{
                 {editing && (
                     <form className='kitchenDishForm' onSubmit={salvar}>
                         <h2>{editing==='novo' ? 'Novo prato' : 'Editar prato'}</h2>
-                        <label>Nome<input value={form.nome} onChange={(e)=>setForm({...form,nome:e.target.value})} required/></label>
+                        <label>Nome<input value={form.nome} maxLength={50} onChange={(e)=>setForm({...form,nome:e.target.value})} required/></label>
                         <label>Preço (R$)<input type='number' step='0.01' min='0' value={form.preco} onChange={(e)=>setForm({...form,preco:e.target.value})} required/></label>
                         <label>Quantidade<input type='number' min='0' value={form.quantidade} onChange={(e)=>setForm({...form,quantidade:e.target.value})} required/></label>
                         <label>Descrição<textarea maxLength={300} value={form.descricao} onChange={(e)=>setForm({...form,descricao:e.target.value})} rows={2}/></label>
@@ -159,7 +159,7 @@ export const KitchenDishes=()=>{
                                         {ingredientes.map((i)=>(<option key={i.id} value={i.id}>{i.nome}</option>))}
                                     </select>
                                     <input type='number' step='0.01' min='0' value={ing.qtd} onChange={(e)=>setIngrediente(idx,'qtd',e.target.value)} placeholder='qtd'/>
-                                    <input value={ing.unidade_medida} onChange={(e)=>setIngrediente(idx,'unidade_medida',e.target.value)} placeholder='un'/>
+                                    <input value={ing.unidade_medida} maxLength={20} onChange={(e)=>setIngrediente(idx,'unidade_medida',e.target.value)} placeholder='un'/>
                                     <button type='button' onClick={()=>removeIngrediente(idx)} aria-label='Remover'>×</button>
                                 </div>
                             ))}

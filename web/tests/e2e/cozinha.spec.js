@@ -97,6 +97,17 @@ test.describe('Cozinheiro — confirmação de item na cozinha', () => {
       // Verifica que a página continua consistente (sem erro).
       await expect(page.getByRole('alert')).toHaveCount(0);
 
+      // 3) Item agora "em preparo": aparece o botão "Marcar pronto". Ao marcar,
+      // o item deve sair da fila da cozinha.
+      const marcarPronto = page.getByRole('button', { name: 'Marcar pronto' }).first();
+      await expect(marcarPronto).toBeVisible();
+      await Promise.all([
+        page.waitForResponse((r) => r.url().includes('/pronto') && r.request().method() === 'POST'),
+        marcarPronto.click(),
+      ]);
+      // Sem erro, e nenhum botão "Marcar pronto" restante para este item.
+      await expect(page.getByRole('alert')).toHaveCount(0);
+
       if (nomePrato) {
         // Sanidade: o nome do prato comprado é uma string não vazia.
         expect(nomePrato.length).toBeGreaterThan(0);

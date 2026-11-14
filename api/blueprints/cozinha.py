@@ -105,6 +105,26 @@ def confirmar_item(id_pedido, id_prato):
     return jsonify({"success": True, "item": _item_json(CRUD.read.pedido_prato((id_pedido, id_prato)))})
 
 
+@cozinha_bp.post("/itens/<int:id_pedido>/<int:id_prato>/pronto")
+@validar
+@permission((cook, admin))
+def marcar_pronto_item(id_pedido, id_prato):
+    """Marca um item 'em preparo' (confirmado) como PRONTO. Ao ficar pronto, o item
+    sai da fila da cozinha (que mostra apenas aguardando/confirmado)."""
+    item, erro = _carregar_item(id_pedido, id_prato)
+    if erro:
+        return erro
+    if item.status != "confirmado":
+        return err_json("INVALID_TRANSITION", f"Item não pode ser marcado como pronto (estado atual: {item.status}).", status=409)
+    try:
+        CRUD.update.pedido_prato((id_pedido, id_prato), {"status": "pronto"})
+    except SQLAlchemyError:
+        db.session.rollback()
+        logger.exception("Falha ao marcar item pronto %s/%s.", id_pedido, id_prato)
+        return err_json("DATABASE_ERROR", "Não foi possível marcar o item como pronto.", status=500)
+    return jsonify({"success": True, "item": _item_json(CRUD.read.pedido_prato((id_pedido, id_prato)))})
+
+
 @cozinha_bp.post("/itens/<int:id_pedido>/<int:id_prato>/negar")
 @validar
 @permission((cook, admin))

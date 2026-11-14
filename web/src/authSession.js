@@ -253,6 +253,22 @@ export async function confirmKitchenItem(idPedido, idPrato, { request = fetch } 
   return data.item;
 }
 
+export async function markKitchenItemReady(idPedido, idPrato, { request = fetch } = {}) {
+  const csrfToken = await getCsrfToken(request);
+  const response = await request(`/api/cozinha/itens/${idPedido}/${idPrato}/pronto`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'X-CSRFToken': csrfToken },
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    const error = new Error(data.error?.message || 'Não foi possível marcar o item como pronto.');
+    error.code = data.error?.code;
+    throw error;
+  }
+  return data.item;
+}
+
 export async function denyKitchenItem(idPedido, idPrato, motivo, { request = fetch } = {}) {
   const csrfToken = await getCsrfToken(request);
   const response = await request(`/api/cozinha/itens/${idPedido}/${idPrato}/negar`, {

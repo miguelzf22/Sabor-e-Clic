@@ -39,21 +39,24 @@ export const SignUpForm=()=>{
             placeholder:"Primeiro nome",
             type:"text",
             value: nome,
-            onChange: (e) => setNome(e.target.value)
+            onChange: (e) => setNome(e.target.value),
+            maxLength: 60
         },
         {
             label:"Sobrenome",
             placeholder:"Insira seu sobrenome",
             type:"text",
             value: sobrenome,
-            onChange: (e) => setSobrenome(e.target.value)
+            onChange: (e) => setSobrenome(e.target.value),
+            maxLength: 59
         },
         {
             label:"Email",
             placeholder:"exemplo@email.com",
             type:"text",
             value: email,
-            onChange: (e) => setEmail(e.target.value)
+            onChange: (e) => setEmail(e.target.value),
+            maxLength: 90
         }
     ]
 
@@ -116,18 +119,19 @@ export const SignUpForm=()=>{
                                         onChange={input.onChange}
                                         value={input.value}
                                         className="loginInput"
+                                        maxLength={input.maxLength}
                                     />
                                 </div>
                             ))}
             <label className='addressLabel'>Endereço</label>
             <AddressSelect onAddressChange={setEndereco}/>
-            <Input label="Rua" placeholder="Ex: Rua Augusta" type="text" className="loginInput" onChange={(e) => setRua(e.target.value)}/>
-            <Input label="CEP" placeholder="Ex: 01001-000" type="text" className="loginInput" onChange={(e) => setCep(e.target.value)}/>
+            <Input label="Rua" placeholder="Ex: Rua Augusta" type="text" className="loginInput" maxLength={45} onChange={(e) => setRua(e.target.value)}/>
+            <Input label="CEP" placeholder="Ex: 01001-000" type="text" className="loginInput" maxLength={9} onChange={(e) => setCep(e.target.value)}/>
             <div className='divNumComp'>
-                <Input label="Número" placeholder="Ex: 120" type="text" className="loginInput" onChange={(e) => setNum(e.target.value)}/>
-                <Input label="Complemento" placeholder="Ex: apto 13" type="text" className="loginInput" onChange={(e) => setComp(e.target.value)}/>
+                <Input label="Número" placeholder="Ex: 120" type="text" className="loginInput" maxLength={5} onChange={(e) => setNum(e.target.value)}/>
+                <Input label="Complemento" placeholder="Ex: apto 13" type="text" className="loginInput" maxLength={45} onChange={(e) => setComp(e.target.value)}/>
             </div>
-            <Input label="Bairro" placeholder="Ex: Centro" type="text" className="loginInput" onChange={(e) => setBairro(e.target.value)}/>
+            <Input label="Bairro" placeholder="Ex: Centro" type="text" className="loginInput" maxLength={45} onChange={(e) => setBairro(e.target.value)}/>
                 <Input label="Senha" placeholder="Crie sua senha" type="password" className="loginInput" onChange={(e) => setSenha(e.target.value)}/>
                 <p className='ReqP'>Sua senha deve conter ao mínimo:</p>
                 <ul className='pwdReq'>

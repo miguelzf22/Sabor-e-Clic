@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../authContext'
-import { fetchKitchenOrders, confirmKitchenItem, denyKitchenItem } from '../authSession'
+import { fetchKitchenOrders, confirmKitchenItem, denyKitchenItem, markKitchenItemReady } from '../authSession'
 import { Header } from '../Components/Header'
 import './Kitchen.css'
 
@@ -43,6 +43,14 @@ export const Kitchen=()=>{
         if(busy) return
         setBusy(chave(item)); setError('')
         try{ await confirmKitchenItem(item.id_pedido,item.id_prato); load() }
+        catch(err){ setError(err.message) }
+        finally{ setBusy(null) }
+    }
+
+    const marcarPronto=async (item)=>{
+        if(busy) return
+        setBusy(chave(item)); setError('')
+        try{ await markKitchenItemReady(item.id_pedido,item.id_prato); load() }
         catch(err){ setError(err.message) }
         finally{ setBusy(null) }
     }
@@ -111,6 +119,13 @@ export const Kitchen=()=>{
                                             <button type='button' className='kitchenDeny' onClick={()=>{ setNegando(item); setMotivo('') }}>Negar</button>
                                         </>
                                     )}
+                                </div>
+                            )}
+                            {item.status==='confirmado' && (
+                                <div className='kitchenCardActions'>
+                                    <button type='button' className='kitchenConfirm' disabled={busy===chave(item)} onClick={()=>marcarPronto(item)}>
+                                        {busy===chave(item) ? 'Marcando…' : 'Marcar pronto'}
+                                    </button>
                                 </div>
                             )}
                         </article>
