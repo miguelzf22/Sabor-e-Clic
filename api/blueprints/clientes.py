@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from decorators import customer, permission, validar
 from extensions import db
 from models.crud import CRUD
+from models import services
 from validations import check_json
 from utils import err_json
 import storage
@@ -168,11 +169,11 @@ def adicionar_saldo():
         return err_json("VALIDATION_FAILED", f"O valor deve estar entre R${RECARGA_MIN} e R${RECARGA_MAX}.", status=400)
     cliente = g.current_user.cliente
     try:
-        # Mantém o saldo como inteiro (sem centavos), coerente com a recarga inteira.
-        novo = int(Decimal(str(cliente.saldo))) + valor
-        CRUD.update.cliente(cliente.id_usuario, {"saldo": novo})
+        # Crédito atômico (saldo = saldo + :v) via services: evita race e preserva
+        # os centavos já existentes no saldo (ex.: frações de estornos de bancada).
+        atualizado = services.creditar_saldo_cliente(id_cliente=cliente.id_usuario, valor=valor)
     except SQLAlchemyError:
         db.session.rollback()
         logger.exception("Falha ao adicionar saldo do cliente %s.", cliente.id_usuario)
         return err_json("DATABASE_ERROR", "Não foi possível adicionar saldo.", status=500)
-    return jsonify({"success": True, "saldo": str(novo)})
+    return jsonify({"success": True, "saldo": str(atualizado.saldo)})

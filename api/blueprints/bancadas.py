@@ -11,7 +11,7 @@ from models import services
 from models.restaurante import Categoria, Restaurante
 from models.bancada import Bancada, Agendamento
 from validations import check_json
-from utils import err_json
+from utils import err_json, slugify
 import storage
 
 
@@ -288,7 +288,15 @@ def criar_restaurante():
         return err_json("VALIDATION_FAILED", "Preencha os campos obrigatórios.", fields=errors, status=400)
 
     try:
-        restaurante = CRUD.create.restaurante(nome=nome)
+        # Slug único (mesma regra do endpoint canônico em cardapio.py) para o
+        # restaurante ser alcançável pelas rotas baseadas em slug.
+        base = slugify(nome)
+        slug = base
+        n = 2
+        while CRUD.read.restaurantes(filters={"slug": slug}, limit=1):
+            slug = f"{base}-{n}"
+            n += 1
+        restaurante = CRUD.create.restaurante(nome=nome, slug=slug)
         for category_name in categories:
             existing = CRUD.read.categorias(filters={"nome": category_name}, limit=1)
             if existing:
@@ -299,11 +307,12 @@ def criar_restaurante():
                 id_restaurante=restaurante.id,
                 id_categoria=category.id
             )
-
     except SQLAlchemyError:
+        db.session.rollback()
         logger.exception("Falha ao criar restaurante e vincular categorias.")
         return err_json("DATABASE_ERROR", "Não foi possível criar o restaurante.", status=500)
     except ValueError as e:
+        db.session.rollback()
         return err_json("VALIDATION_FAILED", str(e), status=400)
     logger.info("Restaurante %s criado com %s categoria(s).", restaurante.id, len(categories))
     return jsonify({

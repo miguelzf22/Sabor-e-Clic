@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useCart } from '../cartContext'
 import { useAuth } from '../authContext'
-import { placeOrder, payOrder, fetchAddresses } from '../authSession'
+import { placeOrder, payOrder, fetchAddresses, fetchBalance } from '../authSession'
 import { formatCurrency } from '../utils/formatCurrency'
 import { Header } from '../Components/Header'
 import { CartItem } from '../Components/CartItem'
@@ -27,6 +27,7 @@ export const Order=()=>{
     const [payMessage,setPayMessage]=useState('')
     const [address,setAddress]=useState(null)
     const [addressStatus,setAddressStatus]=useState('loading') // loading | ready | empty | error
+    const [saldo,setSaldo]=useState(user?.saldo ?? null) // saldo exibido; atualizado após pagar
 
     useEffect(()=>{
         let active=true
@@ -72,6 +73,8 @@ export const Order=()=>{
             const pago=await payOrder(pedido.id,metodo)
             setPedido(pago)
             setPayStatus('paid')
+            // Atualiza o saldo exibido (o pagamento debitou do saldo no servidor).
+            fetchBalance().then((s)=>setSaldo(s)).catch(()=>{})
         }catch(error){
             setPayStatus('error')
             setPayMessage(error.message)
@@ -89,14 +92,14 @@ export const Order=()=>{
                         ? <p role='status'>Pagamento registrado ({pedido.metodo_pagamento || metodo}). Agora é só aguardar a cozinha confirmar cada item.</p>
                         : <div className='orderPayment'>
                             <h2>Pagamento</h2>
-                            {user?.saldo!=null && <p className='orderSaldo'>Seu saldo: {formatCurrency(Number(user.saldo))}</p>}
+                            {saldo!=null && <p className='orderSaldo'>Seu saldo: {formatCurrency(Number(saldo))}</p>}
                             <label>Forma de pagamento:
                                 <select value={metodo} onChange={(e)=>setMetodo(e.target.value)}>
                                     <option value='entrega'>Pagar na entrega</option>
                                     <option value='pix_entrega'>PIX na entrega</option>
                                 </select>
                             </label>
-                            <NextBtn type='button' text={payStatus==='paying' ? 'Pagando…' : 'Pagar'} onClick={pagar}/>
+                            <NextBtn type='button' text={payStatus==='paying' ? 'Pagando…' : 'Pagar'} onClick={pagar} disabled={payStatus==='paying'}/>
                             {payStatus==='error' && <p role='alert' className='orderError'>{payMessage}</p>}
                           </div>}
                     <NavLink to='/' className='orderAddMore'>Voltar ao início</NavLink>
@@ -142,7 +145,7 @@ export const Order=()=>{
                         </div>
 
                         <div className='orderActions'>
-                            <NextBtn type='button' text={status==='placing' ? 'Finalizando…' : 'Continuar'} onClick={finalizar}/>
+                            <NextBtn type='button' text={status==='placing' ? 'Finalizando…' : 'Continuar'} onClick={finalizar} disabled={status==='placing'}/>
                             {status==='error' && <p role='alert' className='orderError'>{message}</p>}
                             <NavLink to='/' className='orderAddMore'>Adicionar mais pratos</NavLink>
                         </div>

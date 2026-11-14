@@ -76,6 +76,18 @@ def _creditar_saldo(id_cliente, valor: Decimal) -> None:
     )
 
 
+def creditar_saldo_cliente(*, id_cliente, valor) -> Cliente:
+    """Recarga de saldo: crédito atômico (saldo = saldo + :v) em uma transação.
+
+    Evita read-modify-write (duas recargas concorrentes não se sobrescrevem) e
+    PRESERVA os centavos já existentes no saldo (não trunca). `valor` é a recarga
+    (inteira, validada no blueprint); o saldo pode manter frações de estornos.
+    """
+    with _atomic():
+        _creditar_saldo(id_cliente, Decimal(str(valor)))
+    return db.session.get(Cliente, id_cliente)
+
+
 # ---------------------------------------------------------------------------
 # Pedidos
 # ---------------------------------------------------------------------------

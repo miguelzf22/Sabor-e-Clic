@@ -12,6 +12,6 @@
 }
 
 .SignBtn:hover{
-    color: #506a07;
+    color: var(--brand-hover);
     text-decoration: underline;
 }

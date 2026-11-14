@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Header } from '../../Components/Header'
 import { ImageUploader } from '../../Components/ImageUploader'
-import { setRestaurantImage, setDishImage, createRestaurant } from '../../authSession'
+import { setRestaurantImage, setDishImage, createRestaurant, renameRestaurant } from '../../authSession'
 import './Images.css'
 
 export const Images=()=>{
@@ -11,6 +11,9 @@ export const Images=()=>{
     const [novoNome,setNovoNome]=useState('')
     const [criando,setCriando]=useState(false)
     const [erro,setErro]=useState('')
+    const [editandoId,setEditandoId]=useState(null) // id do restaurante em edição de nome
+    const [nomeEdit,setNomeEdit]=useState('')
+    const [salvandoNome,setSalvandoNome]=useState(false)
 
     const carregar=()=>{
         fetch('/api/restaurantes')
@@ -45,11 +48,24 @@ export const Images=()=>{
         }
     }
 
+    const iniciarEdicao=(rest)=>{ setEditandoId(rest.id); setNomeEdit(rest.nome); setErro('') }
+    const cancelarEdicao=()=>{ setEditandoId(null); setNomeEdit('') }
+    const salvarNome=async (rest)=>{
+        if(salvandoNome || !nomeEdit.trim()) return
+        setSalvandoNome(true); setErro('')
+        try{
+            await renameRestaurant(rest.id, nomeEdit.trim())
+            setEditandoId(null); setNomeEdit('')
+            carregar()
+        }catch(err){ setErro(err.message) }
+        finally{ setSalvandoNome(false) }
+    }
+
     return(
         <main id='conteudo-principal' className='imagesPage'>
             <Header/>
             <div className='imagesContent'>
-                <h1>Restaurantes</h1>
+                <h1>Moderação de restaurantes</h1>
                 <form className='imagesCreate' onSubmit={criar}>
                     <input
                         value={novoNome}
@@ -67,7 +83,28 @@ export const Images=()=>{
                     <div className='imagesGrid'>
                         {restaurants.map((rest)=>(
                             <section key={rest.id} className='imagesCard'>
-                                <h2>{rest.nome}</h2>
+                                {editandoId===rest.id ? (
+                                    <div className='imagesRename'>
+                                        <input
+                                            value={nomeEdit}
+                                            onChange={(e)=>setNomeEdit(e.target.value)}
+                                            maxLength={30}
+                                            aria-label='Novo nome do restaurante'
+                                            autoFocus
+                                        />
+                                        <div className='imagesRenameActions'>
+                                            <button type='button' onClick={()=>salvarNome(rest)} disabled={salvandoNome || !nomeEdit.trim()}>
+                                                {salvandoNome ? 'Salvando…' : 'Salvar'}
+                                            </button>
+                                            <button type='button' className='imagesRenameCancel' onClick={cancelarEdicao}>Cancelar</button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className='imagesCardTitle'>
+                                        <h2>{rest.nome}</h2>
+                                        <button type='button' className='imagesRenameBtn' onClick={()=>iniciarEdicao(rest)}>Editar nome</button>
+                                    </div>
+                                )}
                                 <ImageUploader
                                     current={rest.imagem}
                                     label='foto'

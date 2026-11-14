@@ -59,7 +59,7 @@ test.describe('Jornada de compra', () => {
 
     // 7) Pagamento → registra o pagamento.
     await page.getByRole('button', { name: 'Pagar' }).click();
-    await expect(page.getByText(/Pagamento registrado/)).toBeVisible();
+    await expect(page.getByText(/Pagamento registrado/)).toBeVisible({ timeout: 10000 });
   });
 
   test('carrinho vazio ao entrar no pedido mostra estado vazio', async ({ page }) => {

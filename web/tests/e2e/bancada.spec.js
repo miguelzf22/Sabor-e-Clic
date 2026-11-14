@@ -96,4 +96,19 @@ test.describe('Bancada — cliente agenda e cozinheiro aceita', () => {
     // Estado válido: carregou sem erro (com itens ou vazio).
     await expect(page.getByRole('alert')).toHaveCount(0);
   });
+
+  test('o cliente vê seu próprio agendamento em "Meus agendamentos"', async ({ page }) => {
+    const d = new Date();
+    d.setDate(d.getDate() + 75);
+    const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    await loginAndWait(page, CUSTOMER);
+    // Cria um agendamento via mesma API da UI.
+    const ag = await requestBookingViaApi(page, 1, { inicioISO: `${ymd}T14:00`, fimISO: `${ymd}T15:00`, credito: '500.00' });
+    expect(ag?.id).toBeTruthy();
+    // A tela de bancadas deve listar o agendamento do cliente.
+    await page.goto('/catalogo/bancadas');
+    await expect(page.getByRole('heading', { name: 'Meus agendamentos' })).toBeVisible();
+    const lista = page.locator('.agdBancadaBookings');
+    await expect(lista.locator('.agdBancadaBooking').first()).toBeVisible();
+  });
 });

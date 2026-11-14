@@ -100,3 +100,58 @@
 .imagesError{ color: #b3261e; }
 :root[data-theme="dark"] .imagesError{color:#ff8b82}
 @media (prefers-color-scheme: dark){:root[data-theme="system"] .imagesError{color:#ff8b82}}
+
+.imagesCardTitle{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+}
+
+.imagesRenameBtn{
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    padding: .25rem .6rem;
+    border-radius: .35rem;
+    border: 1px solid var(--brand-color);
+    background: transparent;
+    color: var(--brand-color);
+    white-space: nowrap;
+}
+
+.imagesRename{
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+
+.imagesRename input{
+    font: inherit;
+    padding: .5rem;
+    border-radius: .4rem;
+    border: 1px solid var(--muted-text-color);
+    background: var(--bg-color);
+    color: var(--text-color);
+}
+
+.imagesRenameActions{
+    display: flex;
+    gap: .5rem;
+}
+
+.imagesRenameActions button{
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    padding: .4rem .9rem;
+    border-radius: .35rem;
+    border: 1px solid var(--brand-color);
+    background: var(--brand-color);
+    color: var(--bg-color);
+}
+
+.imagesRenameActions .imagesRenameCancel{
+    background: transparent;
+    color: var(--brand-color);
+}

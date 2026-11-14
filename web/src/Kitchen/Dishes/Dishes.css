@@ -112,23 +112,36 @@
     display: flex;
     flex-direction: column;
     gap: .5rem;
-    align-items: flex-start;
+    align-items: stretch;
+    min-width: 140px;
 }
 
 .kitchenDishActions button{
     font: inherit;
     font-size: 14px;
     cursor: pointer;
-    padding: .35rem .8rem;
+    padding: .4rem .8rem;
     border-radius: .35rem;
     border: 1px solid var(--muted-text-color);
     background: transparent;
     color: var(--text-color);
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.kitchenDishActions button:hover{
+    background: color-mix(in srgb, var(--brand-color) 18%, transparent);
 }
 
 .kitchenDishDelete{
     border-color: #b3261e !important;
     color: #b3261e !important;
+}
+
+.kitchenDishActions .kitchenDishDelete:hover{
+    background: color-mix(in srgb, #b3261e 15%, transparent);
 }
 
 .kitchenDishForm{

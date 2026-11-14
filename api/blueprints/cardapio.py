@@ -450,6 +450,37 @@ def _imagem_do_corpo():
     return key, None
 
 
+@cardapio_bp.patch("/restaurantes/<int:id>")
+@validar
+@permission(admin)
+def atualizar_restaurante(id):
+    """Renomeia um restaurante (admin). Regenera o slug a partir do novo nome."""
+    restaurante = CRUD.read.restaurante(id)
+    if restaurante is None:
+        return err_json("NOT_FOUND", "Restaurante não encontrado.", status=404)
+    data = request.get_json(silent=True)
+    if not check_json(data):
+        return err_json("INVALID_JSON", "Envie os dados em formato JSON válido.", status=400)
+    nome = data.get("nome")
+    nome = nome.strip() if isinstance(nome, str) else ""
+    if not nome or len(nome) > 30:
+        return err_json("VALIDATION_FAILED", "Informe um nome de restaurante (até 30 caracteres).", status=400)
+    try:
+        changes = {"nome": nome}
+        # Regenera o slug só se o nome mudou de fato (evita colidir com o próprio).
+        if nome != restaurante.nome:
+            changes["slug"] = _slug_unico(nome)
+        restaurante = CRUD.update.restaurante(id, changes)
+    except ValueError:
+        db.session.rollback()
+        return err_json("VALIDATION_FAILED", "Dados inválidos para o restaurante.", status=400)
+    except SQLAlchemyError:
+        db.session.rollback()
+        logger.exception("Falha ao renomear restaurante %s.", id)
+        return err_json("DATABASE_ERROR", "Não foi possível atualizar o restaurante.", status=500)
+    return jsonify({"success": True, "restaurante": _restaurante_json(restaurante)})
+
+
 @cardapio_bp.patch("/restaurantes/<int:id>/imagem")
 @validar
 @permission(admin)
@@ -459,6 +490,9 @@ def definir_imagem_restaurante(id):
         return erro
     try:
         restaurante = CRUD.update.restaurante(id, {"imagem": key})
+    except ValueError:
+        db.session.rollback()
+        return err_json("VALIDATION_FAILED", "Imagem inválida (chave muito longa ou mal formada).", status=400)
     except SQLAlchemyError:
         db.session.rollback()
         logger.exception("Falha ao definir imagem do restaurante %s.", id)
@@ -482,6 +516,9 @@ def definir_imagem_prato(id):
         return erro
     try:
         prato = CRUD.update.prato(id, {"imagem": key})
+    except ValueError:
+        db.session.rollback()
+        return err_json("VALIDATION_FAILED", "Imagem inválida (chave muito longa ou mal formada).", status=400)
     except SQLAlchemyError:
         db.session.rollback()
         logger.exception("Falha ao definir imagem do prato %s.", id)

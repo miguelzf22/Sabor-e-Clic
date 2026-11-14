@@ -15,8 +15,8 @@ export const StockItem=({item})=>{
         <li className='stockItemWrapper'>
             {soldOut && <p className='stockItemAlert'>Produto esgotado!</p>}
             <div className={`stockItem flex flex-col gap-4 sm:flex-row ${soldOut ? 'soldOut' : ''}`}>
-                {/*Imagem do produto (placeholder quando ausente)*/}
-                <div className='stockItemImg w-full sm:w-[192px]' style={item.imagem ? { backgroundImage: `url(${item.imagem})` } : undefined}></div>
+                {/*Imagem do produto (placeholder padrão quando ausente)*/}
+                <div className='stockItemImg w-full sm:w-[192px]' style={{ backgroundImage: `url(${item.imagem || '/api/placeholder'})` }}></div>
                 <div className='stockItemInfo'>
                     <div className='stockItemTitle'>
                         <h2>{item.nome}</h2>

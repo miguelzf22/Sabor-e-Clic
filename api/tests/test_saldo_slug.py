@@ -51,8 +51,20 @@ class SaldoSlugTests(unittest.TestCase):
     def test_add_balance(self):
         r = self.client.post("/api/perfil/saldo", json={"valor": 50})
         self.assertEqual(r.status_code, 200, r.get_json())
-        # Saldo é tratado como inteiro (sem centavos): 200 inicial + 50.
-        self.assertEqual(r.get_json()["saldo"], "250")
+        # Crédito atômico preservando a precisão do Numeric(10,2): 200 inicial + 50.
+        self.assertEqual(Decimal(r.get_json()["saldo"]), Decimal("250.00"))
+
+    def test_add_balance_preserves_existing_cents(self):
+        # Regressão: uma recarga inteira NÃO pode truncar os centavos já existentes
+        # no saldo (ex.: frações vindas de estornos de bancada/pedido).
+        from models.crud import CRUD as _CRUD
+        with self.app.app_context():
+            cli = _CRUD.read.usuario_por_email("ana@example.com").cliente
+            _CRUD.update.cliente(cli.id_usuario, {"saldo": Decimal("160.50")})
+        r = self.client.post("/api/perfil/saldo", json={"valor": 50})
+        self.assertEqual(r.status_code, 200, r.get_json())
+        # 160.50 + 50 = 210.50 (centavos preservados, não 210).
+        self.assertEqual(Decimal(r.get_json()["saldo"]), Decimal("210.50"))
 
     def test_add_balance_rejects_out_of_range(self):
         self.assertEqual(self.client.post("/api/perfil/saldo", json={"valor": 0}).status_code, 400)

@@ -435,6 +435,11 @@ def confirm_password_reset():
         PasswordResetToken.token_hash == hashlib.sha256(raw_token.encode()).hexdigest()
     )).scalar_one_or_none()
     now = datetime.now(timezone.utc)
+    # expires_at/used_at são armazenados como UTC "naive". Usa um `now` sem tzinfo
+    # nas comparações/escritas em SQL para evitar mistura naive/aware (que no
+    # Postgres 'timestamp without time zone' pode falhar). O check em Python abaixo
+    # normaliza o lado do banco com replace(tzinfo=utc).
+    now_naive = now.replace(tzinfo=None)
     if reset is None or reset.used_at is not None or reset.expires_at.replace(tzinfo=timezone.utc) <= now:
         return err_json("INVALID_OR_EXPIRED_TOKEN", "Token inválido ou expirado.", status=400)
     user = db.session.get(Usuario, reset.user_id)
@@ -448,8 +453,8 @@ def confirm_password_reset():
         claimed = db.session.execute(db.update(PasswordResetToken).where(
             PasswordResetToken.id == reset.id,
             PasswordResetToken.used_at.is_(None),
-            PasswordResetToken.expires_at > now,
-        ).values(used_at=now).execution_options(synchronize_session=False))
+            PasswordResetToken.expires_at > now_naive,
+        ).values(used_at=now_naive).execution_options(synchronize_session=False))
         if claimed.rowcount != 1:
             db.session.rollback()
             return err_json("INVALID_OR_EXPIRED_TOKEN", "Token inválido ou expirado.", status=400)
@@ -459,7 +464,7 @@ def confirm_password_reset():
             PasswordResetToken.user_id == user.id,
             PasswordResetToken.id != reset.id,
             PasswordResetToken.used_at.is_(None),
-        ).values(used_at=now))
+        ).values(used_at=now_naive))
         db.session.commit()
     except SQLAlchemyError:
         db.session.rollback()

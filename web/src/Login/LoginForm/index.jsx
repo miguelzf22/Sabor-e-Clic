@@ -19,9 +19,12 @@ export const LoginForm=()=>{
     const [needsVerification,setNeedsVerification]=useState(false);
     const [resendState,setResendState]=useState('idle'); // idle | sending | sent | error
     const [resendMessage,setResendMessage]=useState('');
+    const [submitting,setSubmitting]=useState(false);
 
     const loginLogic = async (e) => {
         e.preventDefault();
+        if (submitting) return; // evita duplo-submit (duplo-clique / Enter repetido)
+        setSubmitting(true);
         setError('');
         setNeedsVerification(false);
         setResendState('idle');
@@ -36,6 +39,8 @@ export const LoginForm=()=>{
             if (error.code === 'EMAIL_NOT_VERIFIED') {
                 setNeedsVerification(true);
             }
+        } finally {
+            setSubmitting(false);
         }
     }
 
@@ -95,7 +100,7 @@ return (
                         </p>
                     </div>
                 ))}
-                <NextBtn text="Continuar"/>
+                <NextBtn text={submitting ? "Entrando…" : "Continuar"} disabled={submitting}/>
 
                 {needsVerification && (
                     <div className="resendValidation">

@@ -28,7 +28,7 @@
     background-color: #ffac11;
     background-size: cover;
     background-position: center;
-    border: 6px solid #fffaf5;
+    border: 6px solid var(--bg-color);
     border-radius: 50%;
 }
 

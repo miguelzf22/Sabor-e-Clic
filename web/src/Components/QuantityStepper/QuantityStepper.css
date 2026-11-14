@@ -6,7 +6,7 @@
     height: 34px;
     padding: 0 8px;
     box-sizing: border-box;
-    background-color: #fffefe;
+    background-color: var(--surface-color);
     border-radius: 4px;
     font-family: Poppins;
     font-weight: 300;
@@ -29,6 +29,6 @@
 }
 
 .quantityStepper button:disabled{
-    color: #c4bcb2;
+    color: var(--muted-text-color);
     cursor: default;
 }

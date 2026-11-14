@@ -7,7 +7,6 @@ import { Login } from './Login';
 import { SignUp } from './SignUp';
 import { AgdBancada } from './AgdBancada';
 import { Bancada } from './Bancada';
-import { Carrinho } from './Carrinho';
 import { EmailVerification } from './EmailVerification';
 import { AuthProvider } from './AuthProvider';
 import { CartProvider } from './CartProvider';
@@ -84,7 +83,7 @@ return (
       <Route path='/cadastro/autenticar' element={<EmailVerification/>}/>
       <Route path='/catalogo/bancadas' element={<Protected><AgdBancada/></Protected>}/>
       <Route path='/bancada/:id' element={<Protected><Bancada/></Protected>}/>
-      <Route path='/carrinho' element={<Protected roles={['customer']}><Carrinho/></Protected>}/>
+      <Route path='/carrinho' element={<Navigate to="/pedido" replace/>}/>
       <Route path='/recuperar-senha' element={<PasswordRecovery/>}/>
       <Route path='/redefinir-senha' element={<PasswordReset/>}/>
       <Route path='/restaurante/:slug' element={<Restaurant/>}/>
@@ -100,7 +99,8 @@ return (
       <Route path='/gerente/restaurantes/:id/metricas' element={<Protected roles={['cook','admin']}><RestaurantMetrics/></Protected>}/>
       <Route path='/gerente/restaurantes/metricas' element={<Protected roles={['cook','admin']}><RestaurantMetrics/></Protected>}/>
       <Route path='/gerente/staff' element={<Protected roles={['admin']}><Staff/></Protected>}/>
-      <Route path='/gerente/imagens' element={<Protected roles={['admin']}><Images/></Protected>}/>
+      <Route path='/gerente/moderacao-restaurantes' element={<Protected roles={['admin']}><Images/></Protected>}/>
+      <Route path='/gerente/imagens' element={<Navigate to="/gerente/moderacao-restaurantes" replace/>}/>
       <Route path='/gerente/filiacoes' element={<Protected roles={['admin']}><Affiliations/></Protected>}/>
       <Route path='/cozinha' element={<Protected roles={['cook','admin']}><Kitchen/></Protected>}/>
       <Route path='/cozinha/minhas-cozinhas' element={<Protected roles={['cook','admin']}><KitchenOverview/></Protected>}/>

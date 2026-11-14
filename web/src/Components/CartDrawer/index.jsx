@@ -50,9 +50,11 @@ export const CartDrawer=({open,onClose})=>{
                         <span>Total :</span>
                         <span>{formatCurrency(subtotal)}</span>
                     </div>
-                    <NavLink to='/pedido' className='cartDrawerLink' onClick={onClose}>
-                        <NextBtn text='Continuar'/>
-                    </NavLink>
+                    {items.length>0 && (
+                        <NavLink to='/pedido' className='cartDrawerLink' onClick={onClose}>
+                            <NextBtn text='Continuar'/>
+                        </NavLink>
+                    )}
                     {items.length>0 && (
                         <button type='button' className='cartDrawerClear' onClick={clear}>Esvaziar carrinho</button>
                     )}

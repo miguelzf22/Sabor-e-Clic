@@ -10,6 +10,7 @@ from extensions import db
 from models.crud import CRUD
 from validations import check_json
 from utils import err_json
+import placeholders
 import storage
 
 estoque_bp = Blueprint("estoque", __name__, url_prefix="/api")
@@ -26,7 +27,7 @@ def _ingrediente_json(ing):
         "validade": ing.validade.isoformat(),
         "unidade": ing.unidade,
         "quantidade": str(ing.quantidade),
-        "imagem": storage.url_for_key(ing.imagem) if ing.imagem else None,
+        "imagem": placeholders.image_url_or_placeholder(ing.imagem, storage.url_for_key),
     }
 
 

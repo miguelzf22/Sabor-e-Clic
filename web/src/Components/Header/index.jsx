@@ -67,7 +67,7 @@ export const Header=()=>{
                                 <PackageIcon className='headerIcon'/>
                                 <span className='hidden sm:inline'>Estoque</span>
                             </NavLink>}
-                            {user.role==='cook' && <NavLink to='/cozinha/bancadas' className='headerHome'>
+                            {(user.role==='cook' || user.role==='admin') && <NavLink to='/cozinha/bancadas' className='headerHome'>
                                 <ForkKnifeIcon className='headerIcon'/>
                                 <span className='hidden sm:inline'>Bancadas</span>
                             </NavLink>}

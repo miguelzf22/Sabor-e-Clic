@@ -174,6 +174,9 @@ def definir_foto():
             CRUD.update.funcionario(uid, {"avatar": key})
         else:
             CRUD.update.cliente(uid, {"avatar": key})
+    except ValueError:
+        db.session.rollback()
+        return err_json("VALIDATION_FAILED", "Imagem inválida (chave muito longa ou mal formada).", status=400)
     except SQLAlchemyError:
         db.session.rollback()
         logger.exception("Falha ao definir avatar do usuário %s.", uid)

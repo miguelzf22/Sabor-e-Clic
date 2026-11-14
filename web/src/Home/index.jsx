@@ -28,7 +28,7 @@ export const Home=()=>{
         <>  
             <Header/>
             <Ad1/>
-            <div id={CONTEUDO_PRINCIPAL_ID} className="restaurantSec max-w-[1390px] mx-auto">
+            <main id={CONTEUDO_PRINCIPAL_ID} className="restaurantSec max-w-[1390px] mx-auto">
                 <div className="restaurantSecP">
                     <p className="restaurantSecTitle">Restaurantes</p>
                     <NavLink to="/catalogo" className="restaurantSecSM">
@@ -45,7 +45,7 @@ export const Home=()=>{
                         </NavLink>
                     ))}
                 </div>}
-            </div>
+            </main>
         </>
     )
 }

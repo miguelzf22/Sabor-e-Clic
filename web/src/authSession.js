@@ -445,6 +445,23 @@ export async function createRestaurant(nome, { imagem } = {}, { request = fetch 
   return data.restaurante;
 }
 
+export async function renameRestaurant(id, nome, { request = fetch } = {}) {
+  const csrfToken = await getCsrfToken(request);
+  const response = await request(`/api/restaurantes/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+    body: JSON.stringify({ nome }),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    const error = new Error(data.error?.message || 'Não foi possível renomear o restaurante.');
+    error.code = data.error?.code;
+    throw error;
+  }
+  return data.restaurante;
+}
+
 export async function fetchRestaurant(slugOrId, { request = fetch } = {}) {
   const response = await request(`/api/restaurantes/${encodeURIComponent(slugOrId)}`, { credentials: 'include' });
   const data = await response.json();

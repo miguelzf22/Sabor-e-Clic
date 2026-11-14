@@ -42,7 +42,7 @@ class Funcionario(db.Model):
     __tablename__ = 'funcionario'
     id_usuario: Mapped[int] = mapped_column(ForeignKey('usuario.id'), primary_key=True)
     nivel_permissao: Mapped[int] = mapped_column(nullable=False)
-    avatar: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    avatar: Mapped[str | None] = mapped_column(String(512), nullable=True)
     usuario: Mapped['Usuario'] = relationship(back_populates='funcionario')
     __table_args__ = (
         CheckConstraint(
@@ -55,7 +55,7 @@ class Cozinheiro(db.Model):
     __tablename__ = 'cozinheiro'
     id_usuario: Mapped[int] = mapped_column(ForeignKey('usuario.id'), primary_key=True)
     especialidade: Mapped[str] = mapped_column(String(60), nullable=False)
-    avatar: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    avatar: Mapped[str | None] = mapped_column(String(512), nullable=True)
     usuario: Mapped['Usuario'] = relationship(back_populates='cozinheiro')
     turno: Mapped[list['Turno']] = relationship(back_populates='cozinheiro', cascade='all, delete-orphan')
     agendamento: Mapped[list['Agendamento']] = relationship(back_populates='cozinheiro')
@@ -90,7 +90,7 @@ class Turno(db.Model):
 class Cliente(db.Model):
     __tablename__ = 'cliente'
     id_usuario: Mapped[int] = mapped_column(ForeignKey('usuario.id'), primary_key=True)
-    avatar: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    avatar: Mapped[str | None] = mapped_column(String(512), nullable=True)
     saldo: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, default=200)
     endereco: Mapped[list['ClienteEndereco']] = relationship(back_populates='cliente', cascade='all, delete-orphan')
     usuario: Mapped['Usuario'] = relationship(back_populates='cliente')

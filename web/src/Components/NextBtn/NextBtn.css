@@ -1,8 +1,8 @@
 .nextBtn{
     font-family: poppins;
     font-weight: 300;
-    background-color: #426700;
-    color: #FFFFFF;
+    background-color: var(--brand-color);
+    color: var(--bg-color);
     border: none;
     border-radius: 4px;
     padding: 12px 0 12px 0;
@@ -15,7 +15,7 @@
 }
 
 .nextBtn:hover{
-    background-color: #304c00;
+    background-color: var(--brand-hover);
 }
 
 .nextBtn:disabled{

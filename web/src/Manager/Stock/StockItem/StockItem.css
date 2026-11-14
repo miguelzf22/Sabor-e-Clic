@@ -29,7 +29,7 @@
 .stockItem .stockItemImg{
     flex-shrink: 0;
     height: 176px;
-    background-color: #d9d2c9;
+    background-color: color-mix(in srgb, var(--text-color) 12%, var(--surface-color));
     background-size: cover;
     background-position: center;
 }

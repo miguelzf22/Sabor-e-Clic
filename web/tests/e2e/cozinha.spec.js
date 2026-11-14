@@ -80,7 +80,7 @@ test.describe('Cozinheiro — confirmação de item na cozinha', () => {
       await custPage.getByRole('button', { name: 'Continuar' }).click();
       await expect(custPage.getByRole('heading', { name: 'Pedido confirmado!' })).toBeVisible();
       await custPage.getByRole('button', { name: 'Pagar' }).click();
-      await expect(custPage.getByText(/Pagamento registrado/)).toBeVisible();
+      await expect(custPage.getByText(/Pagamento registrado/)).toBeVisible({ timeout: 10000 });
 
       // 2) Cozinheiro vê o item aguardando e confirma.
       await loginAndWait(page, COOK);

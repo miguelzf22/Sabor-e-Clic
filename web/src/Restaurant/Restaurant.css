@@ -38,7 +38,7 @@
     height: 38px;
     padding: 0;
 
-    background-color: #fffaf5;
+    background-color: var(--surface-color);
     color: #719b0b;
 
     border: none;
@@ -65,7 +65,7 @@
     top: 58px;
     right: 14px;
     max-width: 260px;
-    background: #fff;
+    background: var(--surface-color);
     color: #b3261e;
     border: 1px solid #b3261e;
     border-radius: 6px;
@@ -184,4 +184,19 @@
 .restaurantPageMenu {
     padding-top: 88px;
     padding-bottom: 80px;
+}
+
+/* Âmbar escuro das avaliações lê bem em fundo claro, mas não em fundo escuro.
+   No tema escuro, usa um âmbar mais claro para manter contraste e identidade. */
+:root[data-theme="dark"] .restaurantPageRatingValue,
+:root[data-theme="dark"] .restaurantPageRatingCount,
+:root[data-theme="dark"] .restaurantPageRatingEmpty{
+    color: #ffc14d;
+}
+@media (prefers-color-scheme: dark){
+    :root[data-theme="system"] .restaurantPageRatingValue,
+    :root[data-theme="system"] .restaurantPageRatingCount,
+    :root[data-theme="system"] .restaurantPageRatingEmpty{
+        color: #ffc14d;
+    }
 }
