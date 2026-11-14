@@ -78,8 +78,21 @@ def _decode_and_reencode(data: bytes):
         raise UploadError("Arquivo de imagem inválido ou corrompido.") from exc
 
 
-def ensure_configured() -> None:
-    """Falha cedo (no boot) se o backend de produção não estiver configurado."""
+def ensure_configured(*, is_production: bool = False) -> None:
+    """Falha cedo (no boot) se o backend de imagens não estiver configurado.
+
+    Em produção/serverless o disco é somente-leitura, então o backend 'local' NÃO
+    funciona (todo upload falharia ao gravar). Por isso, em produção, exigimos
+    'blob' + token. Se STORAGE_BACKEND não chegou à função (fica 'local' por
+    padrão), o boot falha com uma mensagem clara em vez de aceitar uploads que
+    quebrariam depois.
+    """
+    if is_production and BACKEND != "blob":
+        raise StorageConfigError(
+            "Em produção, STORAGE_BACKEND deve ser 'blob' (o disco serverless é "
+            f"somente-leitura). Valor atual: {BACKEND!r}. Configure STORAGE_BACKEND=blob "
+            "e BLOB_READ_WRITE_TOKEN nas Environment Variables da Vercel."
+        )
     if BACKEND == "blob" and not os.environ.get("BLOB_READ_WRITE_TOKEN"):
         raise StorageConfigError(
             "STORAGE_BACKEND=blob requer BLOB_READ_WRITE_TOKEN no ambiente."
@@ -97,8 +110,15 @@ def save_image(file_storage) -> str:
     key = f"{secrets.token_hex(16)}.{ext}"
     if BACKEND == "blob":
         return _blob_save(key, clean, content_type)
-    UPLOAD_DIR.mkdir(exist_ok=True)
-    (UPLOAD_DIR / key).write_bytes(clean)
+    try:
+        UPLOAD_DIR.mkdir(exist_ok=True)
+        (UPLOAD_DIR / key).write_bytes(clean)
+    except OSError as exc:
+        # Disco somente-leitura (ex.: serverless com STORAGE_BACKEND=local).
+        raise StorageConfigError(
+            "Não foi possível gravar a imagem em disco. Em produção use "
+            "STORAGE_BACKEND=blob (o filesystem serverless é somente-leitura)."
+        ) from exc
     return key
 
 

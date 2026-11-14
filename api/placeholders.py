@@ -15,6 +15,7 @@ Uso:
   - `generate_labeled_placeholder(texto, cor)` -> gera um PNG rotulado em uploads/
     (via magick) e devolve a chave, ou None se o magick não existir.
 """
+import io
 import logging
 import secrets
 import subprocess
@@ -30,22 +31,29 @@ _DEFAULT_NAME = "placeholder.png"
 # URL estável servida por blueprints/uploads.py (rota dedicada).
 PLACEHOLDER_URL = "/api/placeholder"
 
+# Cache em memória dos bytes do placeholder padrão. Gerado uma vez por processo.
+# Evita QUALQUER dependência de arquivo em disco em runtime — essencial no
+# serverless (Vercel), onde o filesystem é read-only/efêmero e arquivos estáticos
+# podem não ser empacotados junto da função. Por isso o /api/placeholder funciona
+# local e no deploy sem depender de static_assets/.
+_DEFAULT_BYTES = None
 
-def default_placeholder_path() -> Path:
-    """Caminho do PNG estático padrão, gerando-o com Pillow se ainda não existir.
 
-    Idempotente. Usa Pillow (sempre disponível) — nada de ImageMagick/rede.
+def default_placeholder_bytes() -> bytes:
+    """Bytes PNG do placeholder padrão (gerados em memória, cacheados por processo).
+
+    Não lê nem escreve em disco — seguro em qualquer ambiente (serverless incluso).
     """
-    _STATIC_DIR.mkdir(exist_ok=True)
-    destino = _STATIC_DIR / _DEFAULT_NAME
-    if destino.is_file():
-        return destino
-    _render_default_with_pillow(destino)
-    return destino
+    global _DEFAULT_BYTES
+    if _DEFAULT_BYTES is None:
+        buf = io.BytesIO()
+        _draw_default(buf)
+        _DEFAULT_BYTES = buf.getvalue()
+    return _DEFAULT_BYTES
 
 
-def _render_default_with_pillow(destino: Path) -> None:
-    """Desenha um placeholder neutro (fundo + ícone de prato simples) com Pillow."""
+def _draw_default(destino) -> None:
+    """Desenha o placeholder neutro (fundo + ícone de prato). `destino` é path ou buffer."""
     from PIL import Image, ImageDraw
 
     largura, altura = 600, 400
@@ -61,15 +69,28 @@ def _render_default_with_pillow(destino: Path) -> None:
                  outline=traco, width=8)
     draw.ellipse([cx - r_interno, cy - r_interno, cx + r_interno, cy + r_interno],
                  outline=traco, width=5)
-    # Legenda textual (fonte padrão do Pillow; sem depender de fontes do sistema).
     legenda = "Sem imagem"
     try:
         bbox = draw.textbbox((0, 0), legenda)
-        tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+        tw = bbox[2] - bbox[0]
     except Exception:
-        tw, th = (len(legenda) * 6, 11)
+        tw = len(legenda) * 6
     draw.text(((largura - tw) / 2, cy + r_externo + 20), legenda, fill=traco)
     img.save(destino, format="PNG")
+
+
+def default_placeholder_path() -> Path:
+    """Caminho do PNG estático padrão, gerando-o com Pillow se ainda não existir.
+
+    Mantido para uso em dev (CLI/testes). Em runtime serverless prefira
+    default_placeholder_bytes(), que não toca no disco.
+    """
+    _STATIC_DIR.mkdir(exist_ok=True)
+    destino = _STATIC_DIR / _DEFAULT_NAME
+    if destino.is_file():
+        return destino
+    _draw_default(destino)
+    return destino
 
 
 def placeholder_url() -> str:

@@ -318,7 +318,7 @@ def create_app(test_config=None):
     # STOR-001: em produção, falha cedo se o backend de imagens não estiver configurado.
     if is_production:
         import storage as _storage
-        _storage.ensure_configured()
+        _storage.ensure_configured(is_production=True)
 
     # Diretório do SQLite local (apenas dev/teste com caminho de arquivo).
     db_uri = app.config.get("SQLALCHEMY_DATABASE_URI") or ""

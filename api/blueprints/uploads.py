@@ -25,6 +25,9 @@ def enviar_imagem():
         key = storage.save_image(file)
     except storage.UploadError as exc:
         return err_json("VALIDATION_FAILED", str(exc), status=400)
+    except storage.StorageConfigError as exc:
+        logger.error("Upload falhou por configuração de storage: %s", exc)
+        return err_json("STORAGE_NOT_CONFIGURED", str(exc), status=500)
     return jsonify({"success": True, "key": key, "url": storage.url_for_key(key)}), 201
 
 
@@ -39,7 +42,9 @@ def servir_placeholder():
     """Imagem padrão (stock) servida quando a entidade não tem foto própria.
 
     Público (não exige sessão): é apenas uma imagem genérica, sem dados sensíveis.
-    O arquivo é estático e versionado; gerado com Pillow na primeira chamada se faltar.
+    Gerada em memória (sem depender de arquivo em disco), para funcionar no
+    serverless da Vercel, onde o filesystem é read-only e arquivos estáticos
+    podem não ser empacotados junto da função.
     """
-    caminho = placeholders.default_placeholder_path()
-    return send_from_directory(caminho.parent, caminho.name, mimetype="image/png")
+    from flask import Response
+    return Response(placeholders.default_placeholder_bytes(), mimetype="image/png")
