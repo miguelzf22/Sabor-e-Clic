@@ -19,6 +19,7 @@ Chaves vs URLs:
 """
 import io
 import json
+import logging
 import os
 import secrets
 import urllib.error
@@ -26,6 +27,8 @@ import urllib.request
 from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
+
+logger = logging.getLogger(__name__)
 
 UPLOAD_DIR = Path(__file__).resolve().parent / "uploads"
 BACKEND = os.environ.get("STORAGE_BACKEND", "local").lower()
@@ -157,7 +160,9 @@ def _blob_save(key: str, data: bytes, content_type: str) -> str:
         headers={
             "authorization": f"Bearer {token}",
             "x-content-type": content_type,
-            "x-api-version": "7",
+            # Versão da API HTTP do Blob. Precisa acompanhar o que o serviço aceita;
+            # uma versão antiga demais retorna 400. '11' é a usada pelos SDKs atuais.
+            "x-api-version": "11",
             "x-add-random-suffix": "0",
             "content-type": content_type,
         },
@@ -165,8 +170,18 @@ def _blob_save(key: str, data: bytes, content_type: str) -> str:
     try:
         with urllib.request.urlopen(request, timeout=15) as response:
             payload = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        # A API do Blob respondeu com erro (4xx/5xx). O corpo diz o motivo exato
+        # (ex.: versão de API inválida, token sem permissão, header faltando).
+        try:
+            corpo = exc.read().decode("utf-8", "replace")[:300]
+        except Exception:
+            corpo = ""
+        logger.error("Vercel Blob PUT falhou: HTTP %s %s | %s", exc.code, exc.reason, corpo)
+        raise UploadError(f"Falha ao enviar a imagem ao armazenamento (HTTP {exc.code}: {corpo})") from exc
     except urllib.error.URLError as exc:
-        raise UploadError("Falha ao enviar a imagem ao armazenamento.") from exc
+        logger.error("Vercel Blob inacessível: %s", exc.reason)
+        raise UploadError("Falha ao enviar a imagem ao armazenamento (sem conexão com o Blob).") from exc
     url = payload.get("url")
     if not url:
         raise UploadError("Resposta inválida do armazenamento de imagens.")
