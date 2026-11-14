@@ -18,12 +18,9 @@ Chaves vs URLs:
     coexistem sem migração forçada.
 """
 import io
-import json
 import logging
 import os
 import secrets
-import urllib.error
-import urllib.request
 from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
@@ -42,7 +39,7 @@ _ALLOWED = {
 MAX_BYTES = 2 * 1024 * 1024  # 2 MB
 MAX_DIMENSION = 4096  # px por lado; barra "image bombs" com dimensões absurdas
 
-_BLOB_API = "https://blob.vercel-storage.com"
+_BLOB_API = "https://blob.vercel-storage.com"  # usado só para reconhecer URLs do Blob em key_exists
 
 
 class UploadError(ValueError):
@@ -148,50 +145,53 @@ def key_exists(key: str) -> bool:
 
 
 def _blob_save(key: str, data: bytes, content_type: str) -> str:
-    """Faz PUT no Vercel Blob e devolve a URL pública. Usa só a stdlib (sem SDK).
+    """Envia a imagem ao Vercel Blob via SDK oficial e devolve a URL pública.
 
-    O acesso é definido por BLOB_ACCESS (padrão 'public'). Fotos de produto são
-    públicas, então o store do Blob deve ser criado com acesso PUBLIC. Se o store
-    for 'private', a API rejeita 'public' e, além disso, a URL não seria servível
-    diretamente no site — por isso o padrão/recomendado é um store público.
+    Usa o pacote `vercel-blob` (API síncrona `vercel.blob.sync`), que mantém o
+    contrato HTTP correto do serviço — o endpoint cru não é documentado como
+    estável, então errar headers/versão gera 400 silenciosos.
+
+    O acesso é definido por BLOB_ACCESS (padrão 'public') e DEVE casar com o tipo
+    do store: fotos de produto são públicas, então o store deve ser criado como
+    PUBLIC. Credenciais: o SDK resolve BLOB_READ_WRITE_TOKEN (ou OIDC via
+    BLOB_STORE_ID) a partir do ambiente; não passamos token explícito.
     """
-    token = os.environ.get("BLOB_READ_WRITE_TOKEN")
-    if not token:
-        raise StorageConfigError("BLOB_READ_WRITE_TOKEN ausente.")
+    from vercel.blob import sync as blob
+    from vercel.blob import BlobError
+
+    if not (
+        os.environ.get("BLOB_READ_WRITE_TOKEN")
+        or os.environ.get("VERCEL_BLOB_READ_WRITE_TOKEN")
+        or os.environ.get("BLOB_STORE_ID")
+    ):
+        raise StorageConfigError(
+            "Credenciais do Blob ausentes: defina BLOB_READ_WRITE_TOKEN (ou conecte "
+            "o store ao projeto para OIDC com BLOB_STORE_ID)."
+        )
     access = (os.environ.get("BLOB_ACCESS", "public") or "public").strip().lower()
-    # API do Vercel Blob: PUT https://blob.vercel-storage.com/<pathname>
-    request = urllib.request.Request(
-        f"{_BLOB_API}/{key}",
-        data=data,
-        method="PUT",
-        headers={
-            "authorization": f"Bearer {token}",
-            "x-content-type": content_type,
-            # Versão da API HTTP do Blob. Precisa acompanhar o que o serviço aceita;
-            # uma versão antiga demais retorna 400. '11' é a usada pelos SDKs atuais.
-            "x-api-version": "11",
-            # Tipo de acesso do blob — DEVE casar com o tipo do store (public/private).
-            "x-access": access,
-            "x-add-random-suffix": "0",
-            "content-type": content_type,
-        },
-    )
+    if access not in ("public", "private"):
+        access = "public"
     try:
-        with urllib.request.urlopen(request, timeout=15) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        # A API do Blob respondeu com erro (4xx/5xx). O corpo diz o motivo exato
-        # (ex.: versão de API inválida, token sem permissão, header faltando).
-        try:
-            corpo = exc.read().decode("utf-8", "replace")[:300]
-        except Exception:
-            corpo = ""
-        logger.error("Vercel Blob PUT falhou: HTTP %s %s | %s", exc.code, exc.reason, corpo)
-        raise UploadError(f"Falha ao enviar a imagem ao armazenamento (HTTP {exc.code}: {corpo})") from exc
-    except urllib.error.URLError as exc:
-        logger.error("Vercel Blob inacessível: %s", exc.reason)
-        raise UploadError("Falha ao enviar a imagem ao armazenamento (sem conexão com o Blob).") from exc
-    url = payload.get("url")
+        result = blob.put_blob(
+            key,
+            data,
+            access=access,
+            content_type=content_type,
+            # Chave já é única (secrets.token_hex); não precisa de sufixo extra.
+            add_random_suffix=False,
+        )
+    except BlobError as exc:
+        # O SDK expõe status_code/code quando disponíveis; não vazamos token.
+        status = getattr(exc, "status_code", None)
+        code = getattr(exc, "code", None)
+        logger.error(
+            "Vercel Blob put_blob falhou: status=%s code=%s msg=%s",
+            status, code, exc,
+        )
+        raise UploadError(
+            f"Falha ao enviar a imagem ao armazenamento (Blob: {code or status or 'erro'})."
+        ) from exc
+    url = getattr(result, "url", None)
     if not url:
         raise UploadError("Resposta inválida do armazenamento de imagens.")
     return url  # a URL absoluta vira a "key" persistida
