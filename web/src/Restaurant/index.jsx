@@ -4,6 +4,7 @@ import { HeartIcon, StarIcon, StarHalfIcon } from '@phosphor-icons/react'
 import './Restaurant.css'
 import { Header } from '../Components/Header'
 import { CardCardapio } from '../CardCardapio'
+import { RestaurantReviews } from './Reviews'
 import { useFavorites } from '../favoritesContext'
 import { initials, colorFor } from '../utils/avatarColor'
 
@@ -11,6 +12,7 @@ export const Restaurant = () => {
     const { slug } = useParams()
     const [restaurant, setRestaurant] = useState(null)
     const [status, setStatus] = useState('loading')
+    const [tab, setTab] = useState('cardapio')
     const { enabled, isFavorite, toggle, error: favError, clearError } = useFavorites()
     const restaurantId = restaurant?.id
     const fav = enabled && restaurantId != null && isFavorite(restaurantId)
@@ -105,16 +107,45 @@ export const Restaurant = () => {
                 </div>
             </section>
 
+            {/* Abas: cardápio e avaliações */}
+            <div className="restaurantPageTabs" role="tablist" aria-label="Seções do restaurante">
+                <button
+                    role="tab"
+                    aria-selected={tab === 'cardapio'}
+                    className={`restaurantPageTab ${tab === 'cardapio' ? 'is-active' : ''}`}
+                    onClick={() => setTab('cardapio')}
+                >
+                    Cardápio
+                </button>
+                <button
+                    role="tab"
+                    aria-selected={tab === 'avaliacoes'}
+                    className={`restaurantPageTab ${tab === 'avaliacoes' ? 'is-active' : ''}`}
+                    onClick={() => setTab('avaliacoes')}
+                >
+                    Avaliações
+                </button>
+            </div>
+
             {/* Cardápio */}
-            <section className="restaurantPageMenu max-w-[1390px] mx-auto px-4">
-                <div className="restaurantPageGrid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 justify-items-center gap-x-[56px] gap-y-[32px] w-full mx-auto">
-                    {restaurant.pratos.map((dish) => (
-                        <NavLink key={dish.id} to={`/restaurante/${restaurant.slug || restaurant.id}/prato/${dish.slug || dish.id}`} className="block w-full">
-                            <CardCardapio id={dish.id} dishName={dish.nome} description="" price={Number(dish.preco)} image={dish.imagem} available={dish.disponivel !== false}/>
-                        </NavLink>
-                    ))}
-                </div>
-            </section>
+            {tab === 'cardapio' && (
+                <section className="restaurantPageMenu max-w-[1390px] mx-auto px-4">
+                    <div className="restaurantPageGrid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 justify-items-center gap-x-[56px] gap-y-[32px] w-full mx-auto">
+                        {restaurant.pratos.map((dish) => (
+                            <NavLink key={dish.id} to={`/restaurante/${restaurant.slug || restaurant.id}/prato/${dish.slug || dish.id}`} className="block w-full">
+                                <CardCardapio id={dish.id} dishName={dish.nome} description="" price={Number(dish.preco)} image={dish.imagem} available={dish.disponivel !== false}/>
+                            </NavLink>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* Avaliações */}
+            {tab === 'avaliacoes' && (
+                <section className="restaurantPageReviews max-w-[900px] mx-auto px-4">
+                    <RestaurantReviews slugOrId={restaurant.slug || restaurant.id} />
+                </section>
+            )}
         </main>
     )
 }

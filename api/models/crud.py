@@ -13,7 +13,7 @@ from .usuario import (
     Cliente, ClienteEndereco, ClienteFavorito, Cozinheiro, Funcionario, PasswordResetToken,
     Turno, Usuario,
 )
-from .pedido import Pedido, Avaliacao
+from .pedido import Pedido, Avaliacao, AvaliacaoRestaurante
 from .restaurante import (
     Cardapio, Categoria, Ingrediente, Prato, Restaurante, RestauranteEndereco,
     restaurante_categoria,
@@ -128,6 +128,10 @@ class CRUD:
         @staticmethod
         def avaliacao(**dados):
             return _create(Avaliacao, dados)
+
+        @staticmethod
+        def avaliacao_restaurante(**dados):
+            return _create(AvaliacaoRestaurante, dados)
 
         @staticmethod
         def cardapio(**dados):
@@ -282,6 +286,14 @@ class CRUD:
         @staticmethod
         def avaliacoes(filters=None, *, limit=None, offset=0):
             return _read_many(Avaliacao, filters, limit=limit, offset=offset)
+
+        @staticmethod
+        def avaliacao_restaurante(identity):
+            return _read_one(AvaliacaoRestaurante, identity)
+
+        @staticmethod
+        def avaliacoes_restaurante(filters=None, *, limit=None, offset=0):
+            return _read_many(AvaliacaoRestaurante, filters, limit=limit, offset=offset)
 
         @staticmethod
         def cardapio(identity):
@@ -502,6 +514,10 @@ class CRUD:
             return _update_record(Restaurante, identity, changes, _EDITABLE["restaurante"])
 
         @staticmethod
+        def avaliacao_restaurante(identity, changes):
+            return _update_record(AvaliacaoRestaurante, identity, changes, _EDITABLE["avaliacao_restaurante"])
+
+        @staticmethod
         def restaurante_endereco(identity, changes):
             return _update_record(RestauranteEndereco, identity, changes, _EDITABLE["restaurante_endereco"])
 
@@ -617,6 +633,10 @@ class CRUD:
             return _delete_record(Restaurante, identity)
 
         @staticmethod
+        def avaliacao_restaurante(identity):
+            return _delete_record(AvaliacaoRestaurante, identity)
+
+        @staticmethod
         def restaurante_endereco(identity):
             return _delete_record(RestauranteEndereco, identity)
 
@@ -695,6 +715,7 @@ _EDITABLE = {
     "pedido": {"data", "total", "status", "tempo_estimado", "metodo_pagamento"},
     "cardapio": {"nome", "tipo"},
     "restaurante": {"nome", "imagem", "slug"},
+    "avaliacao_restaurante": {"nota", "comentario"},
     "restaurante_endereco": {"rua", "numero", "complemento", "bairro", "cidade", "estado"},
     "prato": {"nome", "preco_unidade", "quantidade", "imagem", "descricao", "slug", "disponivel"},
     "categoria": {"nome"},

@@ -186,6 +186,211 @@
     padding-bottom: 80px;
 }
 
+/* Abas (Cardápio / Avaliações) */
+
+.restaurantPageTabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 24px;
+    border-bottom: 1px solid var(--border-color, #e3ddd3);
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.restaurantPageTab {
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 12px 20px;
+    font-family: "Poppins", sans-serif;
+    font-weight: 500;
+    font-size: 1rem;
+    color: var(--text-color);
+    opacity: 0.6;
+    cursor: pointer;
+    transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.restaurantPageTab:hover {
+    opacity: 0.85;
+}
+
+.restaurantPageTab.is-active {
+    opacity: 1;
+    border-bottom-color: #719b0b;
+}
+
+/* Avaliações */
+
+.restaurantPageReviews {
+    padding-top: 40px;
+    padding-bottom: 80px;
+}
+
+.reviews {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.reviewStars {
+    display: inline-flex;
+    align-items: center;
+    color: #ffa900;
+}
+
+.reviewStars svg {
+    width: 18px;
+    height: 18px;
+}
+
+.reviewsSummary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.reviewsSummaryValue {
+    font-weight: 600;
+    color: #8a5a00;
+}
+
+.reviewsSummaryCount {
+    font-weight: 500;
+    font-size: 0.9em;
+    color: #8a5a00;
+}
+
+.reviewsEmpty {
+    color: var(--text-color);
+    opacity: 0.75;
+}
+
+/* Formulário de avaliação (layout reaproveitado do histórico de pedidos) */
+
+.reviewForm {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color, #e3ddd3);
+    border-radius: 10px;
+}
+
+.reviewFormTitle {
+    margin: 0;
+    font-weight: 600;
+}
+
+.reviewForm label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.92rem;
+}
+
+.reviewForm select,
+.reviewForm textarea {
+    padding: 8px;
+    border: 1px solid var(--border-color, #cfc8bb);
+    border-radius: 6px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: inherit;
+    resize: vertical;
+}
+
+.reviewForm select {
+    max-width: 90px;
+}
+
+.reviewForm button {
+    align-self: flex-start;
+    padding: 8px 18px;
+    background: #719b0b;
+    color: #fffaf5;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.reviewForm button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.reviewFormError {
+    margin: 0;
+    color: #b3261e;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Lista de avaliações */
+
+.reviewsList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.reviewItem {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.reviewAvatar {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fffaf5;
+    font-weight: 600;
+    font-size: 15px;
+    user-select: none;
+}
+
+.reviewBody {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1 1 auto;
+}
+
+.reviewHead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.reviewName {
+    font-weight: 600;
+}
+
+.reviewDate {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+.reviewComment {
+    margin: 2px 0 0;
+    line-height: 1.45;
+}
+
 /* Âmbar escuro das avaliações lê bem em fundo claro, mas não em fundo escuro.
    No tema escuro, usa um âmbar mais claro para manter contraste e identidade. */
 :root[data-theme="dark"] .restaurantPageRatingValue,

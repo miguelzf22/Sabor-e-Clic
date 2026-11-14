@@ -41,3 +41,31 @@ class Avaliacao(db.Model):
         # Uma avaliação por prato dentro de um pedido.
         UniqueConstraint('id_pedido', 'id_prato', name='uq_avaliacao_pedido_prato'),
     )
+
+
+class AvaliacaoRestaurante(db.Model):
+    """Avaliação do restaurante como um todo (uma por cliente por restaurante).
+
+    Distinta de `Avaliacao` (que é por prato dentro de um pedido): aqui o cliente
+    dá uma nota + comentário ao restaurante, direto na página dele, desde que já
+    tenha um pedido pago naquele restaurante. O par único permite editar/substituir
+    a própria avaliação em vez de acumular duplicatas.
+    """
+    __tablename__ = 'avaliacao_restaurante'
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    id_restaurante: Mapped[int] = mapped_column(ForeignKey('restaurante.id'), nullable=False)
+    id_cliente: Mapped[int] = mapped_column(ForeignKey('cliente.id_usuario'), nullable=False)
+    nota: Mapped[int] = mapped_column(nullable=False)
+    comentario: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    criado_em: Mapped[datetime] = mapped_column(nullable=False, default=lambda: datetime.now(timezone.utc))
+    atualizado_em: Mapped[datetime] = mapped_column(
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+    restaurante: Mapped['Restaurante'] = relationship()
+    cliente: Mapped['Cliente'] = relationship()
+    __table_args__ = (
+        CheckConstraint("nota BETWEEN 1 AND 5", name='ck_avaliacao_restaurante_nota'),
+        UniqueConstraint('id_restaurante', 'id_cliente', name='uq_avaliacao_restaurante_cliente'),
+    )

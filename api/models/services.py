@@ -23,9 +23,10 @@ from sqlalchemy.exc import SQLAlchemyError
 from extensions import db
 from .crud import _create, _update_record, _delete_record, _EDITABLE
 from .usuario import Cliente
-from .pedido import Pedido
+from .pedido import Pedido, AvaliacaoRestaurante
 from .bancada import Agendamento
 from .associacao import PedidoPrato
+from .restaurante import Prato
 
 
 class DomainError(Exception):
@@ -226,3 +227,60 @@ def negar_item(*, id_pedido, id_prato, motivo):
         if cliente is not None:
             _creditar_saldo(cliente.id_usuario, Decimal(str(item.preco_total)))
     return db.session.get(PedidoPrato, (id_pedido, id_prato))
+
+
+# ---------------------------------------------------------------------------
+# Avaliações de restaurante
+# ---------------------------------------------------------------------------
+
+def cliente_pode_avaliar_restaurante(*, id_cliente, id_restaurante) -> bool:
+    """Elegibilidade: o cliente tem ao menos um pedido PAGO contendo um prato
+    daquele restaurante. Decidido no servidor (não confiar no front-end)."""
+    statement = (
+        db.select(Pedido.id)
+        .join(PedidoPrato, PedidoPrato.id_pedido == Pedido.id)
+        .join(Prato, Prato.id == PedidoPrato.id_prato)
+        .where(
+            Pedido.id_cliente == id_cliente,
+            Pedido.status == "pago",
+            Prato.id_restaurante == id_restaurante,
+        )
+        .limit(1)
+    )
+    return db.session.execute(statement).first() is not None
+
+
+def salvar_avaliacao_restaurante(*, id_cliente, id_restaurante, nota, comentario):
+    """Cria ou atualiza (upsert) a avaliação do cliente para o restaurante.
+
+    Em UMA transação: revalida a elegibilidade e grava. Uma avaliação por
+    (cliente, restaurante) — reavaliar substitui a anterior em vez de duplicar.
+    Levanta DomainError('NOT_ELIGIBLE') se o cliente nunca pagou um pedido ali.
+    """
+    with _atomic():
+        if not cliente_pode_avaliar_restaurante(id_cliente=id_cliente, id_restaurante=id_restaurante):
+            raise DomainError(
+                "NOT_ELIGIBLE",
+                "Só é possível avaliar um restaurante onde você já fez um pedido.",
+                status=409,
+            )
+        existente = db.session.execute(
+            db.select(AvaliacaoRestaurante).where(
+                AvaliacaoRestaurante.id_cliente == id_cliente,
+                AvaliacaoRestaurante.id_restaurante == id_restaurante,
+            )
+        ).scalar_one_or_none()
+        if existente is None:
+            avaliacao = _create(AvaliacaoRestaurante, {
+                "id_cliente": id_cliente,
+                "id_restaurante": id_restaurante,
+                "nota": nota,
+                "comentario": comentario,
+            }, commit=False)
+        else:
+            avaliacao = _update_record(
+                AvaliacaoRestaurante, existente.id,
+                {"nota": nota, "comentario": comentario},
+                _EDITABLE["avaliacao_restaurante"], commit=False,
+            )
+    return db.session.get(AvaliacaoRestaurante, avaliacao.id)

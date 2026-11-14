@@ -627,6 +627,39 @@ export async function fetchDishReviews(id, { request = fetch } = {}) {
 }
 
 
+export async function fetchRestaurantReviews(slugOrId, { request = fetch } = {}) {
+  const response = await request(`/api/restaurantes/${encodeURIComponent(slugOrId)}/avaliacoes`, {
+    credentials: 'include',
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    const error = new Error(data.error?.message || 'Não foi possível carregar as avaliações.');
+    error.code = data.error?.code;
+    throw error;
+  }
+  // { media, total, pode_avaliar, minha_avaliacao, avaliacoes: [...] }
+  return data;
+}
+
+
+export async function submitRestaurantReview(id, { nota, comentario }, { request = fetch } = {}) {
+  const csrfToken = await getCsrfToken(request);
+  const response = await request(`/api/restaurantes/${id}/avaliacoes`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+    body: JSON.stringify({ nota, comentario }),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    const error = new Error(data.error?.message || 'Não foi possível enviar a avaliação.');
+    error.code = data.error?.code;
+    throw error;
+  }
+  return data.avaliacao;
+}
+
+
 export async function requestBooking(bancadaId, { inicio, fim }, { request = fetch } = {}) {
   const csrfToken = await getCsrfToken(request);
   const response = await request(`/api/bancadas/${bancadaId}/agendamentos`, {

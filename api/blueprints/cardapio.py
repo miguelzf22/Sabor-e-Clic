@@ -1,15 +1,16 @@
 import logging
 from decimal import Decimal, InvalidOperation
 
-from flask import Blueprint, g, jsonify, request
+from flask import Blueprint, g, jsonify, request, session
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
-from decorators import admin, cook, permission, validar
+from decorators import admin, cook, customer, permission, validar
 from extensions import db
+from models import services
 from models.crud import CRUD
-from models.pedido import Avaliacao
-from models.restaurante import Prato
+from models.pedido import AvaliacaoRestaurante
+from models.usuario import Usuario
 from validations import check_json
 from utils import err_json, slugify
 import placeholders
@@ -21,23 +22,24 @@ logger = logging.getLogger(__name__)
 
 
 def _ratings_por_restaurante(restaurante_ids=None):
-    """Agrega nota média e contagem de avaliações por restaurante (via Prato).
+    """Agrega nota média e contagem das avaliações de restaurante.
 
-    Uma única consulta agrupada evita N+1. Retorna {id_restaurante: (media, n)}.
+    Uma única consulta agrupada evita N+1. Usa `AvaliacaoRestaurante` (avaliação
+    do restaurante como um todo, feita pelo cliente na página dele), não as
+    avaliações por prato. Retorna {id_restaurante: (media, n)}.
     """
     if restaurante_ids is not None and not restaurante_ids:
         return {}
     statement = (
         db.select(
-            Prato.id_restaurante,
-            func.avg(Avaliacao.nota),
-            func.count(Avaliacao.id),
+            AvaliacaoRestaurante.id_restaurante,
+            func.avg(AvaliacaoRestaurante.nota),
+            func.count(AvaliacaoRestaurante.id),
         )
-        .join(Avaliacao, Avaliacao.id_prato == Prato.id)
-        .group_by(Prato.id_restaurante)
+        .group_by(AvaliacaoRestaurante.id_restaurante)
     )
     if restaurante_ids is not None:
-        statement = statement.where(Prato.id_restaurante.in_(restaurante_ids))
+        statement = statement.where(AvaliacaoRestaurante.id_restaurante.in_(restaurante_ids))
     resultado = {}
     for id_restaurante, media, n in db.session.execute(statement).all():
         resultado[id_restaurante] = (round(float(media), 2) if media is not None else None, int(n))
@@ -153,6 +155,122 @@ def listar_avaliacoes_prato(id):
             for a in avaliacoes
         ],
     })
+
+
+# ---------------------------------------------------------------------------
+# Avaliações do restaurante (nota + comentário por cliente; na página do restaurante)
+# ---------------------------------------------------------------------------
+
+def _avaliacao_restaurante_json(a):
+    """Serializa uma avaliação de restaurante para exibição pública.
+
+    Expõe nome, foto (avatar resolvido pela storage), nota, comentário e data.
+    Não expõe e-mail nem id do cliente.
+    """
+    cliente = a.cliente
+    usuario = cliente.usuario if cliente else None
+    avatar_key = getattr(cliente, "avatar", None) if cliente else None
+    return {
+        "nota": a.nota,
+        "comentario": a.comentario,
+        "cliente": usuario.nome if usuario else "Cliente",
+        "avatar": storage.url_for_key(avatar_key) if avatar_key else None,
+        "criado_em": a.criado_em.isoformat() if a.criado_em else None,
+    }
+
+
+def _cliente_logado_id():
+    """Id do cliente autenticado via sessão, ou None (sem forçar login).
+
+    Usado na leitura pública para informar se o visitante pode avaliar e qual é
+    a sua avaliação atual, sem bloquear visitantes anônimos.
+    """
+    user_id = session.get("user_id")
+    if not user_id:
+        return None
+    user = db.session.get(Usuario, user_id)
+    if user is None or session.get("auth_version") != user.auth_version:
+        return None
+    return user.cliente.id_usuario if user.cliente else None
+
+
+@cardapio_bp.get("/restaurantes/<identificador>/avaliacoes")
+def listar_avaliacoes_restaurante(identificador):
+    """Avaliações do restaurante (lista + média). Leitura pública.
+
+    Para o cliente logado, informa se ele pode avaliar (já tem pedido pago no
+    restaurante) e devolve a avaliação dele, se houver.
+    """
+    restaurante = _buscar_restaurante(identificador)
+    if restaurante is None:
+        return err_json("NOT_FOUND", "Restaurante não encontrado.", status=404)
+    avaliacoes = CRUD.read.avaliacoes_restaurante(filters={"id_restaurante": restaurante.id})
+    avaliacoes = sorted(avaliacoes, key=lambda a: a.criado_em or 0, reverse=True)
+    notas = [a.nota for a in avaliacoes]
+    media = round(sum(notas) / len(notas), 1) if notas else None
+
+    pode_avaliar = False
+    minha_avaliacao = None
+    id_cliente = _cliente_logado_id()
+    if id_cliente is not None:
+        pode_avaliar = services.cliente_pode_avaliar_restaurante(
+            id_cliente=id_cliente, id_restaurante=restaurante.id
+        )
+        propria = next((a for a in avaliacoes if a.id_cliente == id_cliente), None)
+        if propria is not None:
+            minha_avaliacao = {"nota": propria.nota, "comentario": propria.comentario}
+
+    return jsonify({
+        "media": media,
+        "total": len(notas),
+        "id": restaurante.id,
+        "pode_avaliar": pode_avaliar,
+        "minha_avaliacao": minha_avaliacao,
+        "avaliacoes": [_avaliacao_restaurante_json(a) for a in avaliacoes],
+    })
+
+
+@cardapio_bp.post("/restaurantes/<int:id>/avaliacoes")
+@validar
+@permission(customer)
+def criar_avaliacao_restaurante(id):
+    """Cria/atualiza a avaliação do cliente para o restaurante.
+
+    Só clientes que já têm um pedido pago no restaurante (checado no serviço).
+    Uma avaliação por cliente: reenviar substitui a anterior.
+    """
+    restaurante = CRUD.read.restaurante(id)
+    if restaurante is None:
+        return err_json("NOT_FOUND", "Restaurante não encontrado.", status=404)
+
+    data = request.get_json(silent=True)
+    if not check_json(data):
+        return err_json("INVALID_JSON", "Envie os dados em formato JSON válido.", status=400)
+
+    nota = data.get("nota")
+    if not isinstance(nota, int) or not (1 <= nota <= 5):
+        return err_json("VALIDATION_FAILED", "A nota deve ser um inteiro entre 1 e 5.", status=400)
+    comentario = data.get("comentario")
+    if comentario is not None:
+        if not isinstance(comentario, str) or len(comentario) > 500:
+            return err_json("VALIDATION_FAILED", "Comentário inválido (máx. 500 caracteres).", status=400)
+        comentario = comentario.strip() or None
+
+    try:
+        avaliacao = services.salvar_avaliacao_restaurante(
+            id_cliente=g.current_user.cliente.id_usuario,
+            id_restaurante=id,
+            nota=nota,
+            comentario=comentario,
+        )
+    except services.DomainError as exc:
+        return err_json(exc.code, exc.message, status=exc.status)
+    except SQLAlchemyError:
+        db.session.rollback()
+        logger.exception("Falha ao registrar avaliação do restaurante %s.", id)
+        return err_json("DATABASE_ERROR", "Não foi possível registrar a avaliação.", status=500)
+
+    return jsonify({"success": True, "avaliacao": _avaliacao_restaurante_json(avaliacao)}), 201
 
 
 # ---------------------------------------------------------------------------

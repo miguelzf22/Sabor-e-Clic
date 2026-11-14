@@ -14,7 +14,7 @@ from .usuario import (
     cozinheiro_restaurante,
 )
 
-from .pedido import Pedido, Avaliacao
+from .pedido import Pedido, Avaliacao, AvaliacaoRestaurante
 
 from .restaurante import (
     Cardapio,
