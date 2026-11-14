@@ -148,10 +148,17 @@ def key_exists(key: str) -> bool:
 
 
 def _blob_save(key: str, data: bytes, content_type: str) -> str:
-    """Faz PUT no Vercel Blob e devolve a URL pública. Usa só a stdlib (sem SDK)."""
+    """Faz PUT no Vercel Blob e devolve a URL pública. Usa só a stdlib (sem SDK).
+
+    O acesso é definido por BLOB_ACCESS (padrão 'public'). Fotos de produto são
+    públicas, então o store do Blob deve ser criado com acesso PUBLIC. Se o store
+    for 'private', a API rejeita 'public' e, além disso, a URL não seria servível
+    diretamente no site — por isso o padrão/recomendado é um store público.
+    """
     token = os.environ.get("BLOB_READ_WRITE_TOKEN")
     if not token:
         raise StorageConfigError("BLOB_READ_WRITE_TOKEN ausente.")
+    access = (os.environ.get("BLOB_ACCESS", "public") or "public").strip().lower()
     # API do Vercel Blob: PUT https://blob.vercel-storage.com/<pathname>
     request = urllib.request.Request(
         f"{_BLOB_API}/{key}",
@@ -163,6 +170,8 @@ def _blob_save(key: str, data: bytes, content_type: str) -> str:
             # Versão da API HTTP do Blob. Precisa acompanhar o que o serviço aceita;
             # uma versão antiga demais retorna 400. '11' é a usada pelos SDKs atuais.
             "x-api-version": "11",
+            # Tipo de acesso do blob — DEVE casar com o tipo do store (public/private).
+            "x-access": access,
             "x-add-random-suffix": "0",
             "content-type": content_type,
         },
