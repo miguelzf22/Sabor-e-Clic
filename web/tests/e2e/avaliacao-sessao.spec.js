@@ -26,7 +26,9 @@ test.describe('Avaliações do prato', () => {
     await page.locator('a[href^="/restaurante/"]').first().click();
     await page.locator('a[href*="/prato/"]').first().click();
 
-    await expect(page.getByRole('heading', { name: 'Avaliações' })).toBeVisible();
+    // As avaliações agora ficam em uma aba; abre a aba "Avaliações".
+    await page.getByRole('tab', { name: /Avaliações/ }).click();
+
     // A seção resolve para um dos estados possíveis (sem erro perpétuo de carregamento):
     //  - "ainda não tem avaliações" (vazio), OU
     //  - uma lista de avaliações (.dishPageReview).

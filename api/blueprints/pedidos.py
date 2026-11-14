@@ -151,7 +151,9 @@ def criar_pedido():
 @validar
 @permission(customer)
 def listar_pedidos():
-    pedidos = CRUD.read.pedidos(filters={"id_cliente": g.current_user.cliente.id_usuario})
+    # Só pedidos pagos entram no histórico: um pedido não pago não é processável
+    # e não deve poluir o histórico (o pagamento acontece logo após a criação).
+    pedidos = CRUD.read.pedidos(filters={"id_cliente": g.current_user.cliente.id_usuario, "status": "pago"})
     pedidos = sorted(pedidos, key=lambda pedido: pedido.id, reverse=True)
     return jsonify({"pedidos": [_pedido_json(pedido) for pedido in pedidos]})
 
@@ -169,9 +171,10 @@ def obter_pedido(id):
     return jsonify({"pedido": _pedido_json(pedido)})
 
 
-# Métodos de pagamento aceitos pelo placeholder MVP.
-# shortcut: só "pagar na entrega"/"pix na entrega" por ora; trocar por gateway (Stripe/Mercado Pago/PIX) quando o produto decidir.
-METODOS_PAGAMENTO = {"entrega", "pix_entrega"}
+# Métodos de pagamento aceitos.
+# - "saldo": debita do Saldo Sabor e Clic (débito atômico com checagem de saldo).
+# - "entrega": pagar na entrega; NÃO debita saldo e não o considera.
+METODOS_PAGAMENTO = {"saldo", "entrega"}
 
 
 @pedidos_bp.post("/pedidos/<int:id>/pagamento")
@@ -201,6 +204,8 @@ def pagar_pedido(id):
             id_cliente=g.current_user.cliente.id_usuario,
             metodo=metodo,
             total=Decimal(str(pedido.total)),
+            # "entrega" não debita o saldo nem o considera; só "saldo" cobra.
+            debitar_saldo=(metodo == "saldo"),
         )
     except services.DomainError as error:
         if error.code == "ALREADY_PAID":

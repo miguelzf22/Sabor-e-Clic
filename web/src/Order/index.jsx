@@ -95,8 +95,8 @@ export const Order=()=>{
                             {saldo!=null && <p className='orderSaldo'>Seu saldo: {formatCurrency(Number(saldo))}</p>}
                             <label>Forma de pagamento:
                                 <select value={metodo} onChange={(e)=>setMetodo(e.target.value)}>
-                                    <option value='entrega'>Pagar na entrega</option>
-                                    <option value='pix_entrega'>PIX na entrega</option>
+                                    <option value='saldo'>Pagar com Saldo Sabor e Clic</option>
+                                    <option value='entrega'>Pagar na Entrega</option>
                                 </select>
                             </label>
                             <NextBtn type='button' text={payStatus==='paying' ? 'Pagando…' : 'Pagar'} onClick={pagar} disabled={payStatus==='paying'}/>

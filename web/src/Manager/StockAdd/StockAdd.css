@@ -63,7 +63,9 @@
     width: 100%;
     padding: 8px 40px 8px 16px;
     border: none;
-    background-color: transparent;
+    /* Fundo explícito e temado: sem isto o popup de <option> herda fundo claro do
+       sistema em modo escuro, deixando texto claro ilegível. */
+    background-color: color-mix(in srgb, var(--text-color) 8%, var(--surface-color));
     color: var(--text-color);
     font-family: Poppins;
     font-size: 18px;

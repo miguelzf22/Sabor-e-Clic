@@ -52,7 +52,8 @@
 .stockPage .stockSort select{
     padding-right: 36px;
     border: none;
-    background-color: transparent;
+    /* Fundo explícito e temado para o popup de <option> ficar legível no modo escuro. */
+    background-color: var(--surface-color);
     color: var(--text-color);
     font-family: Poppins;
     font-weight: 300;

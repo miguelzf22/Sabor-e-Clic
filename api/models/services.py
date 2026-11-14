@@ -118,11 +118,13 @@ def criar_pedido_com_itens(*, id_cliente, data, total, status, tempo_estimado, l
     return pedido
 
 
-def pagar_pedido(*, id_pedido, id_cliente, metodo, total):
-    """Debita o saldo e marca o pedido como pago atomicamente e sob concorrência.
+def pagar_pedido(*, id_pedido, id_cliente, metodo, total, debitar_saldo=True):
+    """Marca o pedido como pago atomicamente e sob concorrência.
 
     Usa UPDATE condicional no status (só de != 'pago' para 'pago') para impedir
-    pagamento duplo, e débito atômico com predicado de saldo.
+    pagamento duplo. Só debita o saldo quando `debitar_saldo` é True (pagamento
+    com Saldo Sabor e Clic). Em "pagar na entrega" o saldo não é tocado nem
+    considerado. O débito usa predicado de saldo (atômico).
     """
     total = Decimal(str(total))
     with _atomic():
@@ -135,7 +137,8 @@ def pagar_pedido(*, id_pedido, id_cliente, metodo, total):
         if marcado.rowcount != 1:
             # Já estava pago (ou não existe): idempotente, sem cobrança.
             raise DomainError("ALREADY_PAID", "Pedido já pago.", status=200)
-        _debitar_saldo(id_cliente, total)
+        if debitar_saldo:
+            _debitar_saldo(id_cliente, total)
     return db.session.get(Pedido, id_pedido)
 
 
