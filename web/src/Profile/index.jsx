@@ -10,7 +10,7 @@ import { OrderCard } from './OrderCard'
 import './Profile.css'
 
 export const Profile=()=>{
-    const { user }=useAuth()
+    const { user, refreshUser }=useAuth()
     const isCustomer=user?.role==='customer'
     const [orders,setOrders]=useState([])
     const [status,setStatus]=useState(isCustomer ? 'loading' : 'na') // loading | ready | error | na
@@ -59,6 +59,7 @@ export const Profile=()=>{
             const novo=await addBalance(valor)
             setSaldo(novo)
             setSaldoErro(false)
+            refreshUser().catch(()=>{}) // mantém o saldo do contexto global em dia
             setRecargaMsg({ tipo:'ok', texto:`Saldo atualizado para ${formatCurrency(Number(novo))}.` })
         }
         catch(err){ setRecargaMsg({ tipo:'erro', texto: err.message || 'Não foi possível adicionar saldo. Tente novamente.' }) }

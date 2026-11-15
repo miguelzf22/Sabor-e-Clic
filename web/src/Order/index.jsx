@@ -18,7 +18,7 @@ function formatAddress(a){
 export const Order=()=>{
 
     const { items, subtotal, setQuantity, clear }=useCart()
-    const { user }=useAuth()
+    const { user, refreshUser }=useAuth()
     const [status,setStatus]=useState('idle') // idle | placing | done | error
     const [message,setMessage]=useState('')
     const [pedido,setPedido]=useState(null)
@@ -73,8 +73,10 @@ export const Order=()=>{
             const pago=await payOrder(pedido.id,metodo)
             setPedido(pago)
             setPayStatus('paid')
-            // Atualiza o saldo exibido (o pagamento debitou do saldo no servidor).
+            // Atualiza o saldo exibido aqui e o usuário global (header/perfil),
+            // pois o pagamento debitou do saldo no servidor.
             fetchBalance().then((s)=>setSaldo(s)).catch(()=>{})
+            refreshUser().catch(()=>{})
         }catch(error){
             setPayStatus('error')
             setPayMessage(error.message)

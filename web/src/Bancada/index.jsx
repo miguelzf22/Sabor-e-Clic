@@ -10,7 +10,7 @@ const brl = (value) => new Intl.NumberFormat('pt-BR', { style: 'currency', curre
 
 export const Bancada = () => {
     const { id } = useParams()
-    const { user } = useAuth()
+    const { user, refreshUser } = useAuth()
     const [bancada, setBancada] = useState(null)
     const [status, setStatus] = useState('loading')
     const [inicio, setInicio] = useState('')
@@ -72,6 +72,7 @@ export const Bancada = () => {
             formElement.reset()
             // Atualiza o saldo local após o débito.
             fetchBalance().then((s) => setSaldo(Number(s))).catch(() => {})
+            refreshUser().catch(() => {}) // mantém o saldo do contexto global em dia
         } catch (error) {
             if (error.code === 'INSUFFICIENT_FUNDS') setMessage('Saldo insuficiente para solicitar esta bancada.')
             else if (error.code === 'BOOKING_CONFLICT') setMessage('Esse horário já está ocupado. Escolha outro.')
