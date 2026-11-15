@@ -73,6 +73,118 @@
     gap: .4rem;
     padding-top: 1rem;
     border-top: 1px solid color-mix(in srgb, var(--muted-text-color) 20%, transparent);
+    min-width: 0;
+}
+
+.restaurantsDishName{
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.restaurantsIngList{
+    list-style: none;
+    margin: .2rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    font-size: 13px;
+    color: var(--muted-text-color);
+}
+
+.restaurantsHint{ font-size: 13px; color: var(--muted-text-color); }
+
+.restaurantsIngEdit,
+.restaurantsIngActions button{
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    padding: .35rem .7rem;
+    border-radius: .35rem;
+    border: 1px solid var(--brand-color);
+    background: transparent;
+    color: var(--brand-color);
+}
+
+.restaurantsIngEdit{ align-self: flex-start; margin-top: .3rem; }
+
+.restaurantsIngs{
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    margin-top: .4rem;
+    min-width: 0;
+}
+
+.restaurantsIngRow{
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    margin: 0;
+    padding: .7rem;
+    border: 1px solid color-mix(in srgb, var(--muted-text-color) 30%, transparent);
+    border-radius: .45rem;
+    min-width: 0;
+}
+
+.restaurantsIngLegend{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    width: 100%;
+    padding: 0 .2rem;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.restaurantsIngRemove{
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    padding: .2rem .5rem;
+    border-radius: .3rem;
+    border: 1px solid #b3261e;
+    background: transparent;
+    color: #b3261e;
+}
+
+.restaurantsIngRow label{
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+    font-size: 13px;
+    min-width: 0;
+}
+
+.restaurantsIngRow select,
+.restaurantsIngRow input{
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+    font: inherit;
+    padding: .45rem;
+    border-radius: .35rem;
+    border: 1px solid var(--muted-text-color);
+    background: var(--bg-color);
+    color: var(--text-color);
+}
+
+.restaurantsIngActions{
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.restaurantsIngActions button:nth-child(2){
+    background: var(--brand-color);
+    color: var(--bg-color);
+}
+
+.restaurantsIngActions .restaurantsIngCancel{
+    border-color: var(--muted-text-color);
+    color: var(--text-color);
+    background: transparent;
 }
 
 .restaurantsCreate{

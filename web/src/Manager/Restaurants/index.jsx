@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Header } from '../../Components/Header'
 import { ImageUploader } from '../../Components/ImageUploader'
-import { setRestaurantImage, setDishImage, createRestaurant, renameRestaurant } from '../../authSession'
+import { setRestaurantImage, setDishImage, createRestaurant, renameRestaurant, fetchIngredients, updateDish } from '../../authSession'
 import './Restaurants.css'
 
 export const Restaurants=()=>{
@@ -14,6 +14,10 @@ export const Restaurants=()=>{
     const [editandoId,setEditandoId]=useState(null) // id do restaurante em edição de nome
     const [nomeEdit,setNomeEdit]=useState('')
     const [salvandoNome,setSalvandoNome]=useState(false)
+    const [ingredientes,setIngredientes]=useState([]) // estoque disponível (para o seletor Nome)
+    const [pratoEditando,setPratoEditando]=useState(null) // id do prato com ingredientes em edição
+    const [formIngs,setFormIngs]=useState([]) // linhas de ingrediente do prato em edição
+    const [salvandoPrato,setSalvandoPrato]=useState(false)
 
     const carregar=()=>{
         fetch('/api/restaurantes')
@@ -23,6 +27,8 @@ export const Restaurants=()=>{
     }
 
     useEffect(()=>{ carregar() },[])
+    // Carrega o estoque uma vez: alimenta o seletor "Nome" dos ingredientes.
+    useEffect(()=>{ fetchIngredients().then(setIngredientes).catch(()=>setIngredientes([])) },[])
 
     const criar=async (e)=>{
         e.preventDefault()
@@ -38,6 +44,7 @@ export const Restaurants=()=>{
 
     const abrir=async (id)=>{
         setSelected({ id, loading:true })
+        setPratoEditando(null)
         try{
             const r=await fetch(`/api/restaurantes/${id}`)
             const d=await r.json()
@@ -59,6 +66,33 @@ export const Restaurants=()=>{
             carregar()
         }catch(err){ setErro(err.message) }
         finally{ setSalvandoNome(false) }
+    }
+
+    // --- edição de ingredientes do prato ---
+    const abrirEdicaoPrato=(prato)=>{
+        setErro('')
+        setPratoEditando(prato.id)
+        setFormIngs((prato.ingredientes || []).map((i)=>({
+            id_ingrediente:i.id_ingrediente, unidade_medida:i.unidade_medida, qtd:String(i.qtd),
+        })))
+    }
+    const cancelarEdicaoPrato=()=>{ setPratoEditando(null); setFormIngs([]) }
+    const addIng=()=>setFormIngs((f)=>[...f,{ id_ingrediente:ingredientes[0]?.id, unidade_medida:'un', qtd:'1' }])
+    const setIng=(idx,campo,valor)=>setFormIngs((f)=>f.map((ing,i)=>i===idx ? { ...ing, [campo]:valor } : ing))
+    const removeIng=(idx)=>setFormIngs((f)=>f.filter((_,i)=>i!==idx))
+    const salvarPrato=async (prato)=>{
+        if(salvandoPrato) return
+        setSalvandoPrato(true); setErro('')
+        try{
+            await updateDish(prato.id,{
+                ingredientes:formIngs
+                    .filter((i)=>Number.isInteger(i.id_ingrediente))
+                    .map((i)=>({ id_ingrediente:i.id_ingrediente, unidade_medida:i.unidade_medida, qtd:String(i.qtd) })),
+            })
+            setPratoEditando(null); setFormIngs([])
+            await abrir(selected.id) // recarrega os pratos do restaurante aberto
+        }catch(err){ setErro(err.fields ? Object.values(err.fields).join(' ') : err.message) }
+        finally{ setSalvandoPrato(false) }
     }
 
     return(
@@ -120,13 +154,51 @@ export const Restaurants=()=>{
                                     <ul className='restaurantsDishes'>
                                         {selected.pratos.map((prato)=>(
                                             <li key={prato.id}>
-                                                <span>{prato.nome}</span>
+                                                <span className='restaurantsDishName'>{prato.nome}</span>
                                                 <ImageUploader
                                                     current={prato.imagem}
                                                     label='foto'
                                                     shape='square'
                                                     onUpload={(key)=>setDishImage(prato.id,key).catch(()=>{})}
                                                 />
+                                                {pratoEditando===prato.id ? (
+                                                    <div className='restaurantsIngs'>
+                                                        {formIngs.length===0 && <p className='restaurantsHint'>Nenhum ingrediente. Adicione abaixo.</p>}
+                                                        {formIngs.map((ing,idx)=>(
+                                                            <fieldset key={idx} className='restaurantsIngRow'>
+                                                                <legend className='restaurantsIngLegend'>
+                                                                    <span>Ingrediente {idx+1}</span>
+                                                                    <button type='button' className='restaurantsIngRemove' onClick={()=>removeIng(idx)}>Remover</button>
+                                                                </legend>
+                                                                <label>Nome
+                                                                    <select value={ing.id_ingrediente} onChange={(e)=>setIng(idx,'id_ingrediente',Number(e.target.value))}>
+                                                                        {ingredientes.map((i)=>(<option key={i.id} value={i.id}>{i.nome}</option>))}
+                                                                    </select>
+                                                                </label>
+                                                                <label>Quantidade
+                                                                    <input type='number' step='0.01' min='0' value={ing.qtd} onChange={(e)=>setIng(idx,'qtd',e.target.value)}/>
+                                                                </label>
+                                                                <label>Unidade
+                                                                    <input value={ing.unidade_medida} maxLength={20} onChange={(e)=>setIng(idx,'unidade_medida',e.target.value)}/>
+                                                                </label>
+                                                            </fieldset>
+                                                        ))}
+                                                        <div className='restaurantsIngActions'>
+                                                            <button type='button' onClick={addIng} disabled={!ingredientes.length}>+ Adicionar ingrediente</button>
+                                                            <button type='button' onClick={()=>salvarPrato(prato)} disabled={salvandoPrato}>{salvandoPrato ? 'Salvando…' : 'Salvar ingredientes'}</button>
+                                                            <button type='button' className='restaurantsIngCancel' onClick={cancelarEdicaoPrato}>Cancelar</button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <ul className='restaurantsIngList'>
+                                                            {(prato.ingredientes || []).length===0
+                                                                ? <li className='restaurantsHint'>Sem ingredientes.</li>
+                                                                : prato.ingredientes.map((i)=>(<li key={i.id_ingrediente}>{`${i.qtd} ${i.unidade_medida} · ${i.nome}`}</li>))}
+                                                        </ul>
+                                                        <button type='button' className='restaurantsIngEdit' onClick={()=>abrirEdicaoPrato(prato)}>Editar ingredientes</button>
+                                                    </>
+                                                )}
                                             </li>
                                         ))}
                                     </ul>
