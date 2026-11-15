@@ -1,11 +1,35 @@
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
+import secrets
+import string
 
 from app import app
 from models.crud import CRUD
 from utils import slugify
 
-DEMO_PASSWORD = "SaborDemo123!"
+
+# Credenciais geradas neste reset. Cada usuário recebe uma senha aleatória e
+# forte; a lista é impressa ao final (ensure_* registra aqui quando cria/garante
+# cada conta). Mantido em memória apenas durante a execução do seed.
+GENERATED_CREDENTIALS = []
+
+_PWD_ALPHABET = string.ascii_letters + string.digits + "!@#$%&*?-_"
+
+
+def gerar_senha(tamanho: int = 16) -> str:
+    """Gera uma senha aleatória forte.
+
+    Garante ao menos uma minúscula, uma maiúscula, um dígito e um símbolo, para
+    passar tanto no mínimo de 8 caracteres do CRUD quanto no zxcvbn score >= 3
+    exigido pela API. 16 caracteres de entropia tornam a colisão irrelevante.
+    """
+    while True:
+        senha = "".join(secrets.choice(_PWD_ALPHABET) for _ in range(tamanho))
+        if (any(c.islower() for c in senha)
+                and any(c.isupper() for c in senha)
+                and any(c.isdigit() for c in senha)
+                and any(c in "!@#$%&*?-_" for c in senha)):
+            return senha
 
 
 RESTAURANTS = [
@@ -264,10 +288,11 @@ def ensure_customer(data):
     user = CRUD.read.usuario_por_email(data["email"])
 
     if user is None:
+        senha = gerar_senha()
         user = CRUD.create.cliente_com_endereco(
             nome=data["nome"],
             email=data["email"],
-            senha=DEMO_PASSWORD,
+            senha=senha,
             rua=data["rua"],
             numero=data["numero"],
             cep=data["cep"],
@@ -277,6 +302,7 @@ def ensure_customer(data):
             bairro=data["bairro"],
             complemento=data["complemento"],
         )
+        GENERATED_CREDENTIALS.append(("Cliente", data["nome"], data["email"], senha))
     else:
         cliente = CRUD.read.cliente(user.id)
         if cliente is None:
@@ -308,21 +334,25 @@ def ensure_profile(role, data):
     user = CRUD.read.usuario_por_email(data["email"])
 
     if user is None:
+        senha = gerar_senha()
         if role == "funcionario":
             profile = CRUD.create.funcionario(
                 nome=data["nome"],
                 email=data["email"],
-                senha=DEMO_PASSWORD,
+                senha=senha,
                 nivel_permissao=data["nivel_permissao"],
             )
+            papel = "Administrador"
         else:
             profile = CRUD.create.cozinheiro(
                 nome=data["nome"],
                 email=data["email"],
-                senha=DEMO_PASSWORD,
+                senha=senha,
                 especialidade=data["especialidade"],
             )
+            papel = "Cozinheiro"
         user = profile.usuario
+        GENERATED_CREDENTIALS.append((papel, data["nome"], data["email"], senha))
     else:
         profile_reader = CRUD.read.funcionario if role == "funcionario" else CRUD.read.cozinheiro
         profile = profile_reader(user.id)
@@ -759,6 +789,16 @@ def seed():
     print(f"Cozinheiros: {len(CRUD.read.cozinheiros())}")
     print(f"Pedidos: {len(CRUD.read.pedidos())}")
     print(f"Bancadas: {len(CRUD.read.bancadas())}")
+
+    if GENERATED_CREDENTIALS:
+        print("\n" + "=" * 68)
+        print("CREDENCIAIS GERADAS (anote agora — não são exibidas novamente)")
+        print("=" * 68)
+        for papel, nome, email, senha in GENERATED_CREDENTIALS:
+            print(f"- [{papel}] {nome}")
+            print(f"    email: {email}")
+            print(f"    senha: {senha}")
+        print("=" * 68)
 
 
 def main():

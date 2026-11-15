@@ -154,14 +154,23 @@ export const KitchenDishes=()=>{
                             </div>
                             {!ingredientes.length && <p className='kitchenDishesHint'>Nenhum ingrediente no estoque ainda.</p>}
                             {form.ingredientes.map((ing,idx)=>(
-                                <div key={idx} className='kitchenDishIngredientRow'>
-                                    <select value={ing.id_ingrediente} onChange={(e)=>setIngrediente(idx,'id_ingrediente',Number(e.target.value))}>
-                                        {ingredientes.map((i)=>(<option key={i.id} value={i.id}>{i.nome}</option>))}
-                                    </select>
-                                    <input type='number' step='0.01' min='0' value={ing.qtd} onChange={(e)=>setIngrediente(idx,'qtd',e.target.value)} placeholder='qtd'/>
-                                    <input value={ing.unidade_medida} maxLength={20} onChange={(e)=>setIngrediente(idx,'unidade_medida',e.target.value)} placeholder='un'/>
-                                    <button type='button' onClick={()=>removeIngrediente(idx)} aria-label='Remover'>×</button>
-                                </div>
+                                <fieldset key={idx} className='kitchenDishIngredientRow'>
+                                    <legend className='kitchenDishIngredientLegend'>
+                                        <span>Ingrediente {idx+1}</span>
+                                        <button type='button' className='kitchenDishIngredientRemove' onClick={()=>removeIngrediente(idx)}>Remover</button>
+                                    </legend>
+                                    <label>Nome
+                                        <select value={ing.id_ingrediente} onChange={(e)=>setIngrediente(idx,'id_ingrediente',Number(e.target.value))}>
+                                            {ingredientes.map((i)=>(<option key={i.id} value={i.id}>{i.nome}</option>))}
+                                        </select>
+                                    </label>
+                                    <label>Quantidade
+                                        <input type='number' step='0.01' min='0' value={ing.qtd} onChange={(e)=>setIngrediente(idx,'qtd',e.target.value)} placeholder='qtd'/>
+                                    </label>
+                                    <label>Unidade
+                                        <input value={ing.unidade_medida} maxLength={20} onChange={(e)=>setIngrediente(idx,'unidade_medida',e.target.value)} placeholder='un'/>
+                                    </label>
+                                </fieldset>
                             ))}
                         </div>
 

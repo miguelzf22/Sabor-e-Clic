@@ -1,45 +1,52 @@
-.imagesPage{
+.restaurantsPage{
     min-height: 100vh;
     background-color: var(--bg-color);
     color: var(--text-color);
 }
 
-.imagesContent{
+.restaurantsContent{
     max-width: 1100px;
     margin: 0 auto;
     padding: 2rem 1rem 4rem;
     font-family: Poppins, system-ui, sans-serif;
 }
 
-.imagesContent h1{
+.restaurantsContent h1{
     font-weight: 300;
     font-size: clamp(28px, 4vw, 36px);
     margin: 0 0 1.5rem;
 }
 
-.imagesGrid{
+.restaurantsGrid{
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
 }
 
-.imagesCard{
+/* Caixa consistente com os cards do Hub (.hubCard): mesma borda, raio, padding
+   e realce de borda em hover. */
+.restaurantsCard{
     display: flex;
     flex-direction: column;
     gap: .75rem;
     padding: 1.25rem;
     background: var(--surface-color);
-    border: 1px solid color-mix(in srgb, var(--muted-text-color) 30%, transparent);
+    border: 1px solid var(--muted-text-color);
     border-radius: .5rem;
+    transition: border-color .15s ease;
 }
 
-.imagesCard h2{
+.restaurantsCard:hover{
+    border-color: var(--brand-color);
+}
+
+.restaurantsCard h2{
     margin: 0;
     font-size: 20px;
     font-weight: 400;
 }
 
-.imagesDishesToggle{
+.restaurantsDishesToggle{
     align-self: flex-start;
     font: inherit;
     font-size: 14px;
@@ -51,7 +58,7 @@
     color: var(--brand-color);
 }
 
-.imagesDishes{
+.restaurantsDishes{
     list-style: none;
     margin: 0;
     padding: 0;
@@ -60,7 +67,7 @@
     gap: 1rem;
 }
 
-.imagesDishes li{
+.restaurantsDishes li{
     display: flex;
     flex-direction: column;
     gap: .4rem;
@@ -68,15 +75,14 @@
     border-top: 1px solid color-mix(in srgb, var(--muted-text-color) 20%, transparent);
 }
 
-
-.imagesCreate{
+.restaurantsCreate{
     display: flex;
     gap: .6rem;
     margin-bottom: 1.5rem;
     flex-wrap: wrap;
 }
 
-.imagesCreate input{
+.restaurantsCreate input{
     flex: 1;
     min-width: 220px;
     font: inherit;
@@ -87,7 +93,7 @@
     color: var(--text-color);
 }
 
-.imagesCreate button{
+.restaurantsCreate button{
     font: inherit;
     cursor: pointer;
     padding: .6rem 1.2rem;
@@ -97,18 +103,18 @@
     color: var(--bg-color);
 }
 
-.imagesError{ color: #b3261e; }
-:root[data-theme="dark"] .imagesError{color:#ff8b82}
-@media (prefers-color-scheme: dark){:root[data-theme="system"] .imagesError{color:#ff8b82}}
+.restaurantsError{ color: #b3261e; }
+:root[data-theme="dark"] .restaurantsError{color:#ff8b82}
+@media (prefers-color-scheme: dark){:root[data-theme="system"] .restaurantsError{color:#ff8b82}}
 
-.imagesCardTitle{
+.restaurantsCardTitle{
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: .5rem;
 }
 
-.imagesRenameBtn{
+.restaurantsRenameBtn{
     font: inherit;
     font-size: 13px;
     cursor: pointer;
@@ -120,13 +126,13 @@
     white-space: nowrap;
 }
 
-.imagesRename{
+.restaurantsRename{
     display: flex;
     flex-direction: column;
     gap: .5rem;
 }
 
-.imagesRename input{
+.restaurantsRename input{
     font: inherit;
     padding: .5rem;
     border-radius: .4rem;
@@ -135,12 +141,12 @@
     color: var(--text-color);
 }
 
-.imagesRenameActions{
+.restaurantsRenameActions{
     display: flex;
     gap: .5rem;
 }
 
-.imagesRenameActions button{
+.restaurantsRenameActions button{
     font: inherit;
     font-size: 14px;
     cursor: pointer;
@@ -151,7 +157,7 @@
     color: var(--bg-color);
 }
 
-.imagesRenameActions .imagesRenameCancel{
+.restaurantsRenameActions .restaurantsRenameCancel{
     background: transparent;
     color: var(--brand-color);
 }

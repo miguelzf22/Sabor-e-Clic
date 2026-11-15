@@ -23,7 +23,7 @@ import { Dashboard } from './Manager/Dashboard';
 import { RestaurantMetrics } from './Manager/RestaurantMetrics';
 import { Staff } from './Manager/Staff';
 import { Hub } from './Manager/Hub';
-import { Images } from './Manager/Images';
+import { Restaurants } from './Manager/Restaurants';
 import { Affiliations } from './Manager/Affiliations';
 import { Kitchen } from './Kitchen';
 import { KitchenDishes } from './Kitchen/Dishes';
@@ -99,8 +99,9 @@ return (
       <Route path='/gerente/restaurantes/:id/metricas' element={<Protected roles={['cook','admin']}><RestaurantMetrics/></Protected>}/>
       <Route path='/gerente/restaurantes/metricas' element={<Protected roles={['cook','admin']}><RestaurantMetrics/></Protected>}/>
       <Route path='/gerente/staff' element={<Protected roles={['admin']}><Staff/></Protected>}/>
-      <Route path='/gerente/moderacao-restaurantes' element={<Protected roles={['admin']}><Images/></Protected>}/>
-      <Route path='/gerente/imagens' element={<Navigate to="/gerente/moderacao-restaurantes" replace/>}/>
+      <Route path='/gerente/restaurantes' element={<Protected roles={['admin']}><Restaurants/></Protected>}/>
+      <Route path='/gerente/moderacao-restaurantes' element={<Navigate to="/gerente/restaurantes" replace/>}/>
+      <Route path='/gerente/imagens' element={<Navigate to="/gerente/restaurantes" replace/>}/>
       <Route path='/gerente/filiacoes' element={<Protected roles={['admin']}><Affiliations/></Protected>}/>
       <Route path='/cozinha' element={<Protected roles={['cook','admin']}><Kitchen/></Protected>}/>
       <Route path='/cozinha/minhas-cozinhas' element={<Protected roles={['cook','admin']}><KitchenOverview/></Protected>}/>

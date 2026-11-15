@@ -45,6 +45,103 @@
     align-items: center;
 }
 
+/* Grupo de links inline (desktop). No mobile é substituído pelo menu suspenso. */
+.header .headerLinks{
+    display: flex;
+    align-items: center;
+    gap: inherit;
+}
+
+/* Botão e painel do menu mobile. Ocultos no desktop. */
+.header .headerMenu{
+    display: none;
+    position: relative;
+}
+
+.header .headerMenuBtn{
+    display: flex;
+    padding: 5px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.header .headerMenuBtn:hover{
+    background-color: rgba(255,255,255,0.16);
+}
+
+.header .headerMenuBtn:focus-visible{
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}
+
+.header .headerMenuPanel{
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 60;
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+    border-radius: 12px;
+    background: var(--surface-color);
+    color: var(--text-color);
+    border: 1px solid color-mix(in srgb, var(--muted-text-color) 28%, transparent);
+    box-shadow: 0 12px 28px -8px rgba(0,0,0,0.35);
+    animation: headerMenuIn 0.16s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Seta apontando para o botão, como no menu da AWS. */
+.header .headerMenuPanel::before{
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 14px;
+    width: 12px;
+    height: 12px;
+    background: var(--surface-color);
+    border-left: 1px solid color-mix(in srgb, var(--muted-text-color) 28%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--muted-text-color) 28%, transparent);
+    transform: rotate(45deg);
+}
+
+@keyframes headerMenuIn{
+    from{ opacity: 0; transform: translateY(-6px); }
+    to{ opacity: 1; transform: translateY(0); }
+}
+
+.header .headerMenuItem{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--text-color);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.12s ease;
+}
+
+.header .headerMenuItem:hover{
+    background: color-mix(in srgb, var(--brand-color) 14%, transparent);
+}
+
+.header .headerMenuItem.active{
+    color: var(--brand-color);
+    background: color-mix(in srgb, var(--brand-color) 10%, transparent);
+}
+
+.header .headerMenuItem:focus-visible{
+    outline: 2px solid var(--brand-color);
+    outline-offset: -2px;
+}
+
 .header .headerAccount{
     display: flex;
     align-items: center;
@@ -122,23 +219,17 @@
     transform: scale(1.08);
 }
 
-/* UX-004: em telas estreitas a linha de ações pode exceder a largura (vários
-   itens de cozinheiro/admin). Em vez de cortar, permite rolagem horizontal sem
-   alterar o visual em telas maiores. */
+/* UX-004: em telas estreitas os links inline não cabem. Em vez de rolar a barra
+   horizontalmente (obrigando a procurar os botões), escondemos os links inline e
+   a saudação, e expomos um botão de menu que abre um painel suspenso (estilo AWS)
+   com todos os links. O desktop (>640px) permanece idêntico. */
 @media (max-width: 640px){
-    .header .headerActions{
-        max-width: 68vw;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-    }
-    .header .headerActions::-webkit-scrollbar{
+    .header .headerLinks,
+    .header .headerGreeting{
         display: none;
     }
-    .header .headerGreeting,
-    .header .headerHome,
-    .header .headerAccount{
-        flex-shrink: 0;
+    .header .headerMenu{
+        display: block;
     }
 }
 
@@ -149,7 +240,8 @@
     .header .headerGreeting,
     .header .headerAccount,
     .header .headerCart,
-    .header .headerTheme{
+    .header .headerTheme,
+    .header .headerMenuBtn{
         min-width: 44px;
         min-height: 44px;
         justify-content: center;

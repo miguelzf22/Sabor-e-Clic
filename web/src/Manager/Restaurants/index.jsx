@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import { Header } from '../../Components/Header'
 import { ImageUploader } from '../../Components/ImageUploader'
 import { setRestaurantImage, setDishImage, createRestaurant, renameRestaurant } from '../../authSession'
-import './Images.css'
+import './Restaurants.css'
 
-export const Images=()=>{
+export const Restaurants=()=>{
     const [restaurants,setRestaurants]=useState([])
     const [status,setStatus]=useState('loading') // loading | ready | error
     const [selected,setSelected]=useState(null) // restaurante carregado com pratos
@@ -62,11 +62,11 @@ export const Images=()=>{
     }
 
     return(
-        <main id='conteudo-principal' className='imagesPage'>
+        <main id='conteudo-principal' className='restaurantsPage'>
             <Header/>
-            <div className='imagesContent'>
-                <h1>Moderação de restaurantes</h1>
-                <form className='imagesCreate' onSubmit={criar}>
+            <div className='restaurantsContent'>
+                <h1>Restaurantes</h1>
+                <form className='restaurantsCreate' onSubmit={criar}>
                     <input
                         value={novoNome}
                         onChange={(e)=>setNovoNome(e.target.value)}
@@ -76,15 +76,15 @@ export const Images=()=>{
                     />
                     <button type='submit' disabled={criando}>{criando ? 'Criando…' : 'Criar restaurante'}</button>
                 </form>
-                {erro && <p role='alert' className='imagesError'>{erro}</p>}
+                {erro && <p role='alert' className='restaurantsError'>{erro}</p>}
                 {status==='loading' && <p role='status'>Carregando restaurantes…</p>}
                 {status==='error' && <p role='alert'>Não foi possível carregar os restaurantes.</p>}
                 {status==='ready' && (
-                    <div className='imagesGrid'>
+                    <div className='restaurantsGrid'>
                         {restaurants.map((rest)=>(
-                            <section key={rest.id} className='imagesCard'>
+                            <section key={rest.id} className='restaurantsCard'>
                                 {editandoId===rest.id ? (
-                                    <div className='imagesRename'>
+                                    <div className='restaurantsRename'>
                                         <input
                                             value={nomeEdit}
                                             onChange={(e)=>setNomeEdit(e.target.value)}
@@ -92,17 +92,17 @@ export const Images=()=>{
                                             aria-label='Novo nome do restaurante'
                                             autoFocus
                                         />
-                                        <div className='imagesRenameActions'>
+                                        <div className='restaurantsRenameActions'>
                                             <button type='button' onClick={()=>salvarNome(rest)} disabled={salvandoNome || !nomeEdit.trim()}>
                                                 {salvandoNome ? 'Salvando…' : 'Salvar'}
                                             </button>
-                                            <button type='button' className='imagesRenameCancel' onClick={cancelarEdicao}>Cancelar</button>
+                                            <button type='button' className='restaurantsRenameCancel' onClick={cancelarEdicao}>Cancelar</button>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className='imagesCardTitle'>
+                                    <div className='restaurantsCardTitle'>
                                         <h2>{rest.nome}</h2>
-                                        <button type='button' className='imagesRenameBtn' onClick={()=>iniciarEdicao(rest)}>Editar nome</button>
+                                        <button type='button' className='restaurantsRenameBtn' onClick={()=>iniciarEdicao(rest)}>Editar nome</button>
                                     </div>
                                 )}
                                 <ImageUploader
@@ -111,13 +111,13 @@ export const Images=()=>{
                                     shape='square'
                                     onUpload={(key)=>setRestaurantImage(rest.id,key).catch(()=>{})}
                                 />
-                                <button type='button' className='imagesDishesToggle' onClick={()=>abrir(rest.id)}>
+                                <button type='button' className='restaurantsDishesToggle' onClick={()=>abrir(rest.id)}>
                                     {selected?.id===rest.id ? 'Recarregar pratos' : 'Gerenciar pratos'}
                                 </button>
                                 {selected?.id===rest.id && selected.loading && <p role='status'>Carregando pratos…</p>}
                                 {selected?.id===rest.id && selected.erro && <p role='alert'>Falha ao carregar pratos.</p>}
                                 {selected?.id===rest.id && selected.pratos && (
-                                    <ul className='imagesDishes'>
+                                    <ul className='restaurantsDishes'>
                                         {selected.pratos.map((prato)=>(
                                             <li key={prato.id}>
                                                 <span>{prato.nome}</span>

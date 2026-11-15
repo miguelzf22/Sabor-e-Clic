@@ -8,7 +8,7 @@ const LINKS=[
     { to:'/gerente/estoque', titulo:'Estoque', descricao:'Ingredientes e quantidades.' },
     { to:'/gerente/staff', titulo:'Equipe', descricao:'Criar contas de cozinha e administração.' },
     { to:'/gerente/filiacoes', titulo:'Filiações', descricao:'Vincular cozinheiros a restaurantes.' },
-    { to:'/gerente/moderacao-restaurantes', titulo:'Restaurantes', descricao:'Criar, renomear e gerenciar fotos de restaurantes e pratos.' },
+    { to:'/gerente/restaurantes', titulo:'Restaurantes', descricao:'Criar, renomear e gerenciar fotos de restaurantes e pratos.' },
 ]
 
 export const Hub=()=>{
