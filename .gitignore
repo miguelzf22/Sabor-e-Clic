@@ -42,7 +42,7 @@ __pycache__/
 *.sln
 *.sw*
 
-# those who know 💀
+# Related to AIs and other services
 .codex
 .aws
 .agents
@@ -52,7 +52,7 @@ scripts/
 
 # Playwright
 /test-results/
-/playwright-report/
+web/playwright-report/*
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
@@ -61,3 +61,4 @@ scripts/
 .github/
 api/tests/*
 api/alembic/versions/*
+web/tests/*
