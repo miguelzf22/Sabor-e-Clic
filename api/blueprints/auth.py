@@ -210,7 +210,29 @@ def cadastro():
             code="INVALID_EMAIL",
             message="O email inserido é inválido",
             status = 400
-        )        
+        )
+
+    address_errors = {}
+    if not val.check_cep(f_info['cep']):
+        address_errors['cep'] = "CEP inválido. Use o formato 00000-000."
+    if not val.check_uf(f_info['state']):
+        address_errors['state'] = "Informe uma sigla de estado válida (ex.: SP)."
+    if not val.check_address_number(f_info['number']):
+        address_errors['number'] = "Número inválido. Use apenas dígitos ou S/N."
+    if address_errors:
+        logger.warning("Cadastro recusado por dados de endereço inválidos.")
+        return err_json(
+            code="INVALID_ADDRESS",
+            message="Verifique os dados de endereço informados.",
+            fields=address_errors,
+            status=400
+        )
+
+    # Normaliza o endereço para o formato persistido (CEP com hífen, UF em maiúsculas).
+    cep_digits = f_info['cep'].strip().replace("-", "")
+    f_info['cep'] = f"{cep_digits[:5]}-{cep_digits[5:]}"
+    f_info['state'] = f_info['state'].strip().upper()
+    f_info['number'] = f_info['number'].strip().upper() if not f_info['number'].strip().isdigit() else f_info['number'].strip()
 
     if f_info['password'] != f_info['password_confirmation']:
         logger.warning("Cadastro recusado porque as senhas informadas divergem.")

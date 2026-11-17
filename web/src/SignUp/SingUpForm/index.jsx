@@ -33,6 +33,15 @@ export const SignUpForm=()=>{
 
     const senhasCoincidem= senha === confSenha;
 
+    // Aplica a máscara de CEP brasileira (00000-000) conforme o usuário digita.
+    const formatarCep = (valor) => {
+        const digitos = valor.replace(/\D/g, '').slice(0, 8);
+        return digitos.length > 5 ? `${digitos.slice(0, 5)}-${digitos.slice(5)}` : digitos;
+    };
+
+    // Número do endereço: apenas dígitos ou "S/N".
+    const numeroValido = /^\d{1,5}$/.test(num.trim()) || ['S/N', 'SN'].includes(num.trim().toUpperCase());
+
     const inputs=[
         {
             label:"Nome",
@@ -64,6 +73,21 @@ export const SignUpForm=()=>{
   
     const sendSignUp = async (e) => {
         e.preventDefault();
+
+        const cepValido = /^\d{5}-\d{3}$/.test(cep.trim());
+        if (!cepValido) {
+            setError('CEP inválido. Use o formato 00000-000.');
+            return;
+        }
+        if (!endereco.state?.state_code) {
+            setError('Selecione um estado válido.');
+            return;
+        }
+        if (!numeroValido) {
+            setError('Número inválido. Use apenas dígitos ou S/N.');
+            return;
+        }
+        setError('');
 
         try {
             const csrfToken = await getCsrfToken();
@@ -126,7 +150,7 @@ export const SignUpForm=()=>{
             <label className='addressLabel'>Endereço</label>
             <AddressSelect onAddressChange={setEndereco}/>
             <Input label="Rua" placeholder="Ex: Rua Augusta" type="text" className="loginInput" maxLength={45} onChange={(e) => setRua(e.target.value)}/>
-            <Input label="CEP" placeholder="Ex: 01001-000" type="text" className="loginInput" maxLength={9} onChange={(e) => setCep(e.target.value)}/>
+            <Input label="CEP" placeholder="Ex: 01001-000" type="text" className="loginInput" maxLength={9} value={cep} onChange={(e) => setCep(formatarCep(e.target.value))}/>
             <div className='divNumComp'>
                 <Input label="Número" placeholder="Ex: 120" type="text" className="loginInput" maxLength={5} onChange={(e) => setNum(e.target.value)}/>
                 <Input label="Complemento" placeholder="Ex: apto 13" type="text" className="loginInput" maxLength={45} onChange={(e) => setComp(e.target.value)}/>
